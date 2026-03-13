@@ -1,0 +1,57 @@
+# ======================
+# Python / Django
+# ======================
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.sqlite3
+db.sqlite3
+*.log
+*.pot
+*.py[cod]
+*.env
+*.env.*
+venv/
+ENV/
+env/
+.venv/
+
+# Django specific
+staticfiles/
+media/
+*.mo
+*.log
+local_settings.py
+celerybeat-schedule
+*.sqlite3-journal
+
+# ======================
+# Node / React / Vite
+# ======================
+node_modules/
+dist/
+build/
+.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.vite/
+.env.local
+.env.*.local
+coverage/
+.eslintcache
+*.tsbuildinfo
+
+# ======================
+# IDE / OS
+# ======================
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db
+.DS_Store
+*.sublime-workspace
+*.sublime-project
