@@ -1,7 +1,8 @@
 import { useState } from "react";
 import api from "../api/axios";
-
+import {useNavigate} from "react-router-dom";
 function Login() {
+  const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -12,8 +13,9 @@ function Login() {
       email,
       password
     });
-
     localStorage.setItem("token", res.data.access);
+    alert("Login successful!");
+    navigate("/dashboard");
   };
 
   return (

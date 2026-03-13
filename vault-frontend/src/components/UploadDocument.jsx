@@ -6,7 +6,7 @@ function UploadDocument() {
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState(""); // NEW
+  const [category, setCategory] = useState("");
   const[loading, setLoading] = useState(false);
 
   const handleUpload = async () => {
@@ -19,7 +19,7 @@ function UploadDocument() {
     formData.append("file", file);
     formData.append("title", title);
     formData.append("description", description);
-    formData.append("category_name", category); // send category to backend
+    formData.append("category_name", category); 
 
     const token = localStorage.getItem("token");
 
