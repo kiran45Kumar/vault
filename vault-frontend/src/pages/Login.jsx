@@ -1,6 +1,6 @@
 import { useState } from "react";
 import api from "../api/axios";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 function Login() {
   const navigate = useNavigate();
 
@@ -8,16 +8,17 @@ function Login() {
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
+    try {
+      const response = await api.post("/login/", { email, password });
 
-    const res = await api.post("/login/", {
-      email,
-      password
-    });
-    localStorage.setItem("token", res.data.access);
-    alert("Login successful!");
-    navigate("/dashboard");
+      localStorage.setItem("token", response.data.access);
+
+      navigate("/dashboard");
+    }
+    catch (error) {
+      alert(error.response?.data?.detail || "Login failed. Please check your credentials.");
+    }
   };
-
   return (
     <div>
 

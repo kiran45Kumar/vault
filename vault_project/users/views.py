@@ -9,9 +9,10 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import RegisterSerializer, LoginSerializer
 from django.contrib.auth.hashers import check_password
 from rest_framework.permissions import IsAuthenticated
-
+from rest_framework.throttling import AnonRateThrottle
 # Create your views here.
-
+class LoginThrottle(AnonRateThrottle):
+    rate = "10/min"
 class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -21,7 +22,7 @@ class RegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
-
+    throttle_classes = [LoginThrottle]
     def post(self, request):
         email = request.data.get("email")
         password = request.data.get("password")

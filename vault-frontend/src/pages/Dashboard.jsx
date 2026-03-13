@@ -2,6 +2,10 @@ import UploadDocument from "../components/UploadDocument";
 import DocumentList from "../components/DocumentList";
 
 function Dashboard() {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    return <p>Please log in to view your dashboard. <a href="/">Login here</a></p>;
+  }
   return (
     <div>
 

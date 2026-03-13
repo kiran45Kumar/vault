@@ -63,6 +63,17 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
 
+# throttling
+REST_FRAMEWORK = {
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.UserRateThrottle",
+        "rest_framework.throttling.AnonRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "user": "1000/day",
+        "anon": "100/day",
+    },
+}
 # CORS_ALLOW_ALL_ORIGINS = True
 ROOT_URLCONF = "vault_project.urls"
 
@@ -130,7 +141,7 @@ SIMPLE_JWT = {
 }
 
 
-# Internationalization
+# Internationalizationx
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
 LANGUAGE_CODE = "en-us"
