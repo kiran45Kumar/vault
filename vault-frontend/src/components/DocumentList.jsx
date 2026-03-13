@@ -36,7 +36,11 @@ function DocumentList() {
                         <strong>{doc.title}</strong> - {doc.category_display}
                     </p>
                     {doc.file_url && (
-                        <a href={doc.file_url} download target="_blank" rel="noopener noreferrer">
+                        <a
+                            href={doc.file_url}
+                            download
+                            className="px-3 py-1 bg-blue-500 text-white rounded"
+                        >
                             Download
                         </a>
                     )}
