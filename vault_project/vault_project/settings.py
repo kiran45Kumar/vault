@@ -43,8 +43,8 @@ INSTALLED_APPS = [
     "users",
     "cloudinary",
     "cloudinary_storage",
-    'documents',
-    'categories',
+    "documents",
+    "categories",
 ]
 
 MIDDLEWARE = [
@@ -69,13 +69,15 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.UserRateThrottle",
         "rest_framework.throttling.AnonRateThrottle",
     ],
-    "DEFAULT_THROTTLE_RATES": {
-        "user": "1000/day",
-        "anon": "100/day",
-    },
+    "DEFAULT_THROTTLE_RATES": {"user": "100/min", "anon": "20/min"},
 }
 # CORS_ALLOW_ALL_ORIGINS = True
 ROOT_URLCONF = "vault_project.urls"
+    
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 5
+}
 
 TEMPLATES = [
     {
