@@ -12,7 +12,7 @@ function DocumentList() {
 
             const token = localStorage.getItem("token");
 
-            const res = await api.get(`/documents/?page=${page}`, {
+            const res = await api.get(`/documents/`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -23,7 +23,7 @@ function DocumentList() {
 
         fetchDocs();
 
-    }, [page]);
+    }, []);
 
     return (
         <div className="min-h-screen bg-gray-100">
