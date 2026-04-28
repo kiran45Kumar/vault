@@ -7,15 +7,16 @@ import { Navigate } from "react-router-dom";
 
 function App() {
   const token = localStorage.getItem("token");
-  if (!token){
-    return <Navigate to="/" />;
-  }
+
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+         <Route
+          path="/dashboard"
+          element={token ? <Dashboard /> : <Navigate to="/" />}
+        />
       </Routes>
     </BrowserRouter>
   );
