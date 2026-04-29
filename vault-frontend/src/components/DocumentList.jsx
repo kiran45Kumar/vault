@@ -1,81 +1,113 @@
-import { useEffect, useState } from "react";
 import api from "../api/axios";
+import { toast } from "react-toastify";
+import { FiFileText, FiImage, FiFile, FiTrash2, FiEye } from "react-icons/fi";
 
-function DocumentList() {
+function DocumentList({ docs, setDocs }) {
+  const handleDelete = async (id) => {
+    const token = localStorage.getItem("token");
 
-    const [docs, setDocs] = useState([]);
-    const [page, setPage] = useState(1);
+    try {
+      await api.delete(`/documents/${id}/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    useEffect(() => {
+      setDocs((prev) => prev.filter((doc) => doc.id !== id));
+      toast.success("Deleted");
+    } catch {
+      toast.error("Delete failed");
+    }
+  };
 
-        const fetchDocs = async () => {
+  // 📄 FILE TYPE ICON
+  const getIcon = (file) => {
+    if (!file) return <FiFile />;
+    if (file.endsWith(".pdf")) return <FiFileText className="text-red-500" />;
+    if (file.match(/\.(jpg|jpeg|png)$/))
+      return <FiImage className="text-green-500" />;
+    return <FiFile className="text-gray-500" />;
+  };
 
-            const token = localStorage.getItem("token");
+  return (
+    <div className="bg-white p-6 rounded-2xl shadow-md">
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-5">
+        <h3 className="font-semibold text-gray-800 text-lg">
+          Recent Documents
+        </h3>
 
-            const res = await api.get(`/documents/`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+        <span className="text-indigo-600 text-sm cursor-pointer hover:underline">
+          View All
+        </span>
+      </div>
 
-            setDocs(res.data.results);
-        };
+      {/* EMPTY */}
+      {docs.length === 0 ? (
+        <div className="text-center py-10 text-gray-400 text-sm">
+          No documents uploaded yet.
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+          {docs.map((doc) => (
+            <div
+              key={doc.id}
+              className="group bg-white border border-gray-200 rounded-xl p-4 hover:border-indigo-300 hover:shadow-md transition-all duration-200 cursor-pointer"
+            >
+              {/* ICON */}
+              <div className="text-3xl mb-3 flex items-center justify-center">
+                {getIcon(doc.file_url)}
+              </div>
 
-        fetchDocs();
+              {/* TITLE */}
+              <p className="text-sm font-medium text-gray-800 truncate flex items-center justify-center">
+                {doc.title}
+              </p>
 
-    }, []);
+              {/* CATEGORY */}
+              <p className="text-xs text-gray-500 mt-1 flex items-center justify-center">
+                {doc.category_display}
+              </p>
 
-    return (
-        <div className="min-h-screen bg-gray-100">
-            {/* Content */}
-            <div className="max-w-4xl mx-auto mt-8">
+              {/* META (fake for now, you can replace later) */}
+              <p className="text-xs text-gray-400 mt-1 flex items-center justify-center">
+                {doc.created_at
+                  ? new Date(doc.created_at).toLocaleString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                  })
+                  : "Recently added"}
+              </p>
 
-                <h2 className="text-lg font-semibold mb-4">
-                    Your Documents
-                </h2>
-
-                {docs.length === 0 && (
-                    <p className="text-gray-500">No documents uploaded yet.</p>
+              {/* ACTIONS */}
+              <div className="flex justify-between items-center mt-4 text-xs opacity-0 group-hover:opacity-100 transition">
+                {doc.file_url && (
+                  <a
+                    href={doc.file_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1 text-indigo-600 hover:underline"
+                  >
+                    <FiEye /> View
+                  </a>
                 )}
 
-                <div className="space-y-4">
-
-                    {docs.map((doc) => (
-                        <div
-                            key={doc.id}
-                            className="bg-white p-4 rounded-lg shadow flex justify-between items-center"
-                        >
-
-                            <div>
-                                <p className="font-semibold text-gray-800">
-                                    {doc.title}
-                                </p>
-
-                                <p className="text-sm text-gray-500">
-                                    Category: {doc.category_display}
-                                </p>
-                            </div>
-
-                            {doc.file_url && (
-                                <a
-                                    href={doc.file_url}
-                                    download
-                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                                >
-                                    Download
-                                </a>
-                            )}
-
-                        </div>
-                    ))}
-
-                </div>
-                <button onClick={() => setPage(page - 1)}>Previous</button>
-                <button onClick={() => setPage(page + 1)}>Next</button>
+                <button
+                  onClick={() => handleDelete(doc.id)}
+                  className="flex items-center gap-1 text-red-500 hover:underline"
+                >
+                  <FiTrash2 /> Delete
+                </button>
+              </div>
             </div>
-
+          ))}
         </div>
-    );
+      )}
+    </div>
+  );
 }
 
 export default DocumentList;

@@ -2,7 +2,6 @@ import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from categories.models import Category
-from cloudinary.models import CloudinaryField
 
 
 class Document(models.Model):
@@ -12,10 +11,7 @@ class Document(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
 
     title = models.CharField(max_length=200)
-    file = CloudinaryField(
-            resource_type="raw",
-            type="upload"
-        )
+    file = models.FileField(upload_to="documents/")
     isDeleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -26,5 +22,7 @@ class Document(models.Model):
         indexes = [
             models.Index(fields=['user', 'created_at']),
         ]
+        ordering = ['-created_at']
+
         
         # qhUl7ojuGs5Fx9AfXsiKp6NoXak

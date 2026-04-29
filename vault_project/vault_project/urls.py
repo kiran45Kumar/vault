@@ -23,3 +23,4 @@ urlpatterns = [
     path('api/', include('categories.urls')),
     path('api/', include('documents.urls')),
 ]
+    
