@@ -1,4 +1,5 @@
-import { Outlet, Navigate } from "react-router-dom";
+/* eslint-disable react-hooks/static-components */
+import { Outlet, Navigate, Link, useLocation } from "react-router-dom";
 import {
   FiHome,
   FiFileText,
@@ -6,14 +7,17 @@ import {
   FiUser,
   FiLogOut,
   FiBell,
+  FiMenu,
+  FiX,
 } from "react-icons/fi";
-import { Link, useLocation } from "react-router-dom";
 import api from "../api/axios";
 import { useEffect, useState } from "react";
+
 function DashboardLayout() {
   const token = localStorage.getItem("token");
   const location = useLocation();
   const [initial, setInitial] = useState("A");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -24,16 +28,13 @@ function DashboardLayout() {
           },
         });
         const username = res.data.username;
-
         if (username) {
           setInitial(username.charAt(0).toUpperCase());
-          console.log("Profile data:", res.data);
         }
       } catch (err) {
         console.log("Failed to fetch profile", err);
       }
     };
-
     fetchProfile();
   }, []);
 
@@ -43,89 +44,127 @@ function DashboardLayout() {
     location.pathname === path
       ? "bg-indigo-50 text-indigo-600 font-medium"
       : "text-gray-600 hover:bg-gray-100";
+
+  const Sidebar = () => (
+    <aside className="w-60 bg-white shadow-md px-5 py-6 flex flex-col justify-between h-full relative">
+
+      {/* CLOSE BUTTON (mobile only) */}
+      <button
+        onClick={() => setSidebarOpen(false)}
+        className="absolute top-4 right-4 text-gray-500 md:hidden"
+      >
+        <FiX size={20} />
+      </button>
+
+      <div>
+        <h1 className="text-lg font-semibold mb-8 flex items-center gap-2">
+          🛡 <span>Vault</span>
+        </h1>
+
+        <nav className="flex flex-col gap-4 text-sm">
+          <Link
+            to="/dashboard"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg ${navItem("/dashboard")}`}
+          >
+            <FiHome /> Dashboard
+          </Link>
+
+          <Link
+            to="/dashboard/documents"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg ${navItem("/dashboard/documents")}`}
+          >
+            <FiFileText /> Documents
+          </Link>
+
+          <Link
+            to="/dashboard/upload"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg ${navItem("/dashboard/upload")}`}
+          >
+            <FiUpload /> Upload
+          </Link>
+
+          <Link
+            to="/dashboard/profile"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg ${navItem("/dashboard/profile")}`}
+          >
+            <FiUser /> Profile
+          </Link>
+
+          <button
+            onClick={() => {
+              localStorage.removeItem("token");
+              window.location.href = "/";
+            }}
+            className="flex items-center gap-3 px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg"
+          >
+            <FiLogOut /> Logout
+          </button>
+        </nav>
+      </div>
+    </aside>
+  );
+
   return (
     <div className="h-screen flex bg-[#f8fafc] overflow-hidden">
-      {/* SIDEBAR */}
-      <aside className="w-60 bg-white shadow-md px-5 py-6 flex flex-col justify-between shrink-0">
-        <div>
-          <h1 className="text-lg font-semibold mb-8 flex items-center gap-2">
-            🛡 <span>Vault</span>
-          </h1>
 
-          <nav className="flex flex-col gap-7 text-sm">
-            {/* DASHBOARD */}
-            <Link
-              to="/dashboard"
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${navItem("/dashboard")}`}
-            >
-              <FiHome /> Dashboard
-            </Link>
+      {/* MOBILE SIDEBAR */}
+      {sidebarOpen && (
+        <div className={`fixed inset-0 z-50 flex transition-all duration-300 ${sidebarOpen ? "visible" : "invisible"}`}>
 
-            {/* DOCUMENTS */}
-            <Link
-              to="/dashboard/documents"
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${location.pathname === "/dashboard/documents"
-                  ? "bg-indigo-50 text-indigo-600 font-medium"
-                  : "text-gray-600 hover:bg-gray-100"
-                }`}
-            >
-              <FiFileText /> My Documents
-            </Link>
-
-            {/* UPLOAD */}
-            <Link
-              to="/dashboard/upload"
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${navItem("/dashboard/upload")}`}
-            >
-              <FiUpload /> Upload Document
-            </Link>
-
-            {/* PROFILE */}
-            <Link
-              to="/dashboard/profile"
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${navItem("/dashboard/profile")}`}
-            >
-              <FiUser /> Profile
-            </Link>
-
-            {/* LOGOUT */}
-            <button
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 mt-4 transition"
-              onClick={() => {
-                localStorage.removeItem("token");
-                window.location.href = "/";
-              }}
-            >
-              <FiLogOut /> Logout
-            </button>
-          </nav>
-        </div>
-
-        {/* STORAGE */}
-        <div className="bg-gray-50 p-4 rounded-xl text-xs">
-          <p className="font-medium text-gray-700">Storage Used</p>
-          <p className="text-gray-500 mb-2">2.4 GB / 10 GB</p>
-
-          <div className="w-full bg-gray-200 h-2 rounded-full">
-            <div className="bg-indigo-600 h-2 rounded-full w-[24%]" />
+          {/* SIDEBAR */}
+          <div
+            className={`w-60 bg-white shadow-md transform transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+              }`}
+          >
+            <Sidebar />
           </div>
 
-          <p className="mt-1 text-indigo-600 font-medium">24%</p>
+          {/* BACKDROP */}
+          <div
+            className={`flex-1 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${sidebarOpen ? "opacity-100" : "opacity-0"
+              }`}
+            onClick={() => setSidebarOpen(false)}
+          />
         </div>
-      </aside>
+      )}
+
+      {/* DESKTOP SIDEBAR */}
+      <div className="hidden md:block">
+        <Sidebar />
+      </div>
 
       {/* MAIN */}
       <div className="flex-1 flex flex-col overflow-hidden">
+
         {/* TOPBAR */}
-        <header className="flex justify-between items-center bg-white px-8 py-5 shadow-md shrink-0">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-800">Dashboard</h2>
-            <p className="text-sm text-gray-500">
-              Upload and manage your documents securely.
-            </p>
+        <header className="flex justify-between items-center bg-white px-4 md:px-8 py-4 shadow-md">
+
+          {/* LEFT */}
+          <div className="flex items-center gap-3">
+            {/* MOBILE MENU BUTTON */}
+            <button
+              className="md:hidden text-xl"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <FiMenu />
+            </button>
+
+            <div>
+              <h2 className="text-lg md:text-xl font-semibold text-gray-800">
+                Dashboard
+              </h2>
+              <p className="text-xs md:text-sm text-gray-500">
+                Manage your documents
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-5">
+          {/* RIGHT */}
+          <div className="flex items-center gap-4 md:gap-5">
             <FiBell className="text-gray-500 text-lg cursor-pointer" />
 
             <div className="w-9 h-9 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
@@ -134,8 +173,8 @@ function DashboardLayout() {
           </div>
         </header>
 
-        {/* CONTENT (ONLY THIS SCROLLS) */}
-        <main className="flex-1 overflow-y-auto p-8">
+        {/* CONTENT */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-8">
           <Outlet />
         </main>
       </div>

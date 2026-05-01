@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
 import api from "../api/axios";
 import {
     FiEye,
@@ -7,21 +8,20 @@ import {
     FiSearch,
     FiChevronLeft,
     FiChevronRight,
-    FiDownload
+    FiDownload,
+    FiX
 } from "react-icons/fi";
-
+import { useSwipeable } from "react-swipeable";
 
 function DocumentsPage() {
     const [docs, setDocs] = useState([]);
     const [search, setSearch] = useState("");
     const [sortField, setSortField] = useState("created_at");
     const [sortOrder, setSortOrder] = useState("desc");
-
     const [currentPage, setCurrentPage] = useState(1);
+    const [previewIndex, setPreviewIndex] = useState(null);
+
     const itemsPerPage = 5;
-
-    const [previewDoc, setPreviewDoc] = useState(null);
-
     const token = localStorage.getItem("token");
 
     const fetchDocs = async () => {
@@ -36,14 +36,8 @@ function DocumentsPage() {
     }, []);
 
     useEffect(() => {
-        const handleKey = (e) => {
-            if (e.key === "Escape") setPreviewDoc(null);
-        };
-        window.addEventListener("keydown", handleKey);
-        return () => window.removeEventListener("keydown", handleKey);
-    }, []);
-
-    // DELETE
+        setCurrentPage(1);
+    }, [search]);
     const handleDelete = async (id) => {
         if (!window.confirm("Delete this document?")) return;
 
@@ -53,27 +47,7 @@ function DocumentsPage() {
 
         setDocs((prev) => prev.filter((doc) => doc.id !== id));
     };
-    // const handleDownload = async (doc) => {
-    //     try {
-    //         const response = await fetch(doc.file_url);
-    //         const blob = await response.blob();
 
-    //         const url = window.URL.createObjectURL(blob);
-    //         const a = document.createElement("a");
-
-    //         a.href = url;
-    //         a.download = doc.title || "file";
-    //         document.body.appendChild(a);
-    //         a.click();
-
-    //         a.remove();
-    //         window.URL.revokeObjectURL(url);
-    //     } catch (err) {
-    //         console.error("Download failed", err);
-    //     }
-    // };
-
-    // SORT
     const handleSort = (field) => {
         if (sortField === field) {
             setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -83,7 +57,6 @@ function DocumentsPage() {
         }
     };
 
-    // ✅ FILTER + SORT
     const processedDocs = docs
         .filter((doc) =>
             doc.title.toLowerCase().includes(search.toLowerCase())
@@ -97,274 +70,169 @@ function DocumentsPage() {
                 valB = new Date(valB);
             }
 
-            if (valA < valB) return sortOrder === "asc" ? -1 : 1;
-            if (valA > valB) return sortOrder === "asc" ? 1 : -1;
-            return 0;
+            return sortOrder === "asc" ? valA - valB : valB - valA;
         });
 
-    // ✅ PAGINATION
     const totalPages = Math.ceil(processedDocs.length / itemsPerPage);
     const paginatedDocs = processedDocs.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
 
-    // const formatSize = (size) => {
-    //     if (!size) return "—";
-    //     if (size < 1024) return size + " B";
-    //     if (size < 1024 * 1024)
-    //         return (size / 1024).toFixed(1) + " KB";
-    //     return (size / (1024 * 1024)).toFixed(1) + " MB";
-    // };
-
     const getType = (url) =>
         url ? url.split(".").pop().toUpperCase() : "—";
 
+    // 🔥 SWIPE HANDLERS
+    const handlers = useSwipeable({
+        onSwipedLeft: () =>
+            previewIndex < paginatedDocs.length - 1 &&
+            setPreviewIndex(previewIndex + 1),
+        onSwipedRight: () =>
+            previewIndex > 0 && setPreviewIndex(previewIndex - 1),
+        trackMouse: true,
+    });
+
     if (!token) return <Navigate to="/" replace />;
+
     return (
         <div className="space-y-6">
 
             {/* HEADER */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h2 className="text-2xl font-semibold text-gray-800">
+                    <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
                         My Documents
                     </h2>
                     <p className="text-sm text-gray-500">
-                        Manage, preview, and organize your files
+                        Manage and preview your files
                     </p>
                 </div>
 
-                {/* SEARCH */}
                 <div className="relative w-full md:w-72">
                     <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search documents..."
-                        className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm"
+                        placeholder="Search..."
+                        className="w-full pl-10 pr-4 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500"
                     />
                 </div>
             </div>
 
-            {/* TABLE CARD */}
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            {/* MOBILE VIEW */}
+            <div className="md:hidden space-y-4">
+                {paginatedDocs.map((doc, index) => (
+                    <div key={doc.id} className="bg-white p-4 rounded-xl shadow border">
+                        <div className="flex justify-between">
+                            <div>
+                                <p className="font-medium">{doc.title}</p>
+                                <p className="text-xs text-gray-500">
+                                    {doc.category_display}
+                                </p>
+                            </div>
+                            <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                {getType(doc.file_url)}
+                            </span>
+                        </div>
 
-                <table className="w-full text-sm">
+                        <p className="text-xs text-gray-400 mt-2">
+                            {new Date(doc.created_at).toLocaleDateString("en-IN")}
+                        </p>
 
-                    {/* TABLE HEADER */}
-                    <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+                        <div className="flex justify-between mt-4 text-sm">
+                            <button onClick={() => setPreviewIndex(index)}>
+                                <FiEye /> View
+                            </button>
+
+                            <a href={doc.file_url} target="_blank">
+                                <FiDownload /> Download
+                            </a>
+
+                            <button onClick={() => handleDelete(doc.id)}>
+                                <FiTrash2 /> Delete
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* DESKTOP TABLE */}
+            <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow">
+                <table className="w-full text-sm min-w-175">
+                    <thead className="bg-gray-50 text-xs uppercase">
                         <tr>
-                            <th
-                                onClick={() => handleSort("title")}
-                                className="px-6 py-4 text-left cursor-pointer hover:text-gray-700"
-                            >
-                                Name
-                            </th>
-
-                            <th className="px-6 py-4 text-left">Type</th>
-
-                            <th className="px-6 py-4 text-left">Category</th>
-
-                            <th
-                                onClick={() => handleSort("created_at")}
-                                className="px-6 py-4 text-left cursor-pointer hover:text-gray-700"
-                            >
-                                Uploaded
-                            </th>
-
+                            <th onClick={() => handleSort("title")} className="px-6 py-4">Name</th>
+                            <th className="px-6 py-4">Type</th>
+                            <th className="px-6 py-4">Category</th>
+                            <th onClick={() => handleSort("created_at")} className="px-6 py-4">Date</th>
                             <th className="px-6 py-4 text-right">Actions</th>
                         </tr>
                     </thead>
 
-                    {/* TABLE BODY */}
                     <tbody>
-                        {paginatedDocs.map((doc) => (
-                            <tr
-                                key={doc.id}
-                                className="hover:bg-gray-50 transition duration-150 border-b border-gray-100 last:border-none"
-                            >
-                                {/* NAME */}
+                        {paginatedDocs.map((doc, index) => (
+                            <tr key={doc.id} className="  ">
+                                <td className="px-6 py-4">{doc.title}</td>
+                                <td className="px-6 py-4">{getType(doc.file_url)}</td>
+                                <td className="px-6 py-4">{doc.category_display}</td>
                                 <td className="px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 text-lg">
-                                            📄
-                                        </div>
-                                        <span className="font-medium text-gray-800 truncate max-w-50">
-                                            {doc.title}
-                                        </span>
-                                    </div>
+                                    {new Date(doc.created_at).toLocaleDateString()}
                                 </td>
-
-                                {/* TYPE */}
-                                <td className="px-6 py-4">
-                                    <span className="px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
-                                        {getType(doc.file_url)}
-                                    </span>
-                                </td>
-
-                                {/* SIZE */}
-                                <td className="px-6 py-4 text-gray-600">
-                                    {doc.category_display}
-                                </td>
-
-                                {/* DATE */}
-                                <td className="px-6 py-4 text-gray-500">
-                                    {new Date(doc.created_at).toLocaleString("en-IN", {
-                                        day: "2-digit",
-                                        month: "short",
-                                        year: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                    })}
-                                </td>
-                                {/* ACTIONS */}
-                                <td className="px-6 py-4">
-                                    <div className="flex justify-end gap-2">
-
-                                        {/* VIEW */}
-                                        <button
-                                            onClick={() => setPreviewDoc(doc)}
-                                            className="p-2 rounded-lg hover:bg-indigo-50 text-indigo-600 transition"
-                                        >
-                                            <FiEye size={18} />
-                                        </button>
-
-                                        {/* DELETE */}
-                                        <button
-                                            onClick={() => handleDelete(doc.id)}
-                                            className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition"
-                                        >
-                                            <FiTrash2 size={18} />
-                                        </button>
-
-                                        <a
-                                            href={doc.file_url}
-                                            download
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="p-2 rounded-lg hover:bg-green-50 text-green-600 transition"
-                                        >
-                                            <FiDownload size={18} />
-                                        </a>
-                                    </div>
+                                <td className="px-6 py-4 text-right flex justify-end gap-2">
+                                    <button onClick={() => setPreviewIndex(index)}>
+                                        <FiEye />
+                                    </button>
+                                    <button onClick={() => handleDelete(doc.id)}>
+                                        <FiTrash2 />
+                                    </button>
+                                    <a href={doc.file_url} target="_blank">
+                                        <FiDownload />
+                                    </a>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
+            </div>
 
-                {/* PAGINATION */}
-                <div className="flex items-center justify-between px-6 py-4 border-t-gray-400 shadow-md bg-gray-50">
-                    <p className="text-sm text-gray-500">
-                        Page <span className="font-medium">{currentPage}</span> of{" "}
-                        <span className="font-medium">{totalPages}</span>
-                    </p>
+            {/* PAGINATION */}
+            <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+                <p className="text-sm">
+                    Page {currentPage} of {totalPages}
+                </p>
 
-                    <div className="flex items-center gap-2">
-                        <button
-                            disabled={currentPage === 1}
-                            onClick={() => setCurrentPage((p) => p - 1)}
-                            className="p-2 rounded-lg border bg-white hover:bg-gray-100 disabled:opacity-40"
-                        >
-                            <FiChevronLeft />
-                        </button>
-
-                        <button
-                            disabled={currentPage === totalPages}
-                            onClick={() => setCurrentPage((p) => p + 1)}
-                            className="p-2 rounded-lg border bg-white hover:bg-gray-100 disabled:opacity-40"
-                        >
-                            <FiChevronRight />
-                        </button>
-                    </div>
+                <div className="flex gap-2">
+                    <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
+                        <FiChevronLeft />
+                    </button>
+                    <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+                        <FiChevronRight />
+                    </button>
                 </div>
             </div>
 
-            {/* MODAL */}
-            {previewDoc && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md">
+            {/* 🔥 SWIPE MODAL */}
+            {previewIndex !== null && (
+                <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
+                    <button
+                        onClick={() => setPreviewIndex(null)}
+                        className="absolute top-4 right-4 text-white text-2xl"
+                    >
+                        <FiX />
+                    </button>
 
-                    {/* MAIN WRAPPER */}
-                    <div className="relative w-[85%] h-[85%] flex flex-col">
-
-                        {/* TOP BAR */}
-                        <div className="flex items-center justify-between px-4 py-3 text-white">
-
-                            {/* LEFT */}
-                            <div className="flex items-center gap-3">
-                                <span className="text-lg">📄</span>
-                                <p className="text-sm font-medium truncate max-w-100">
-                                    {previewDoc.title}
-                                </p>
-                            </div>
-
-                            {/* RIGHT */}
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={() => window.open(previewDoc.file_url, "_blank")}
-                                    className="text-sm px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition"
-                                >
-                                    ⬇ Download
-                                </button>
-
-                                <button
-                                    onClick={() => setPreviewDoc(null)}
-                                    className="text-lg hover:opacity-70"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* PREVIEW CARD */}
-                        <div className="flex-1 flex items-center justify-center">
-
-                            <div className="bg-white rounded-2xl shadow-2xl w-full h-full flex items-center justify-center p-4">
-
-                                {/* IMAGE */}
-                                {previewDoc.file_url.match(/\.(jpg|jpeg|png)$/i) && (
-                                    <img
-                                        src={previewDoc.file_url}
-                                        className="max-h-full max-w-full object-contain rounded-xl"
-                                    />
-                                )}
-
-                                {/* PDF */}
-                                {previewDoc.file_url.match(/\.pdf$/i) && (
-                                    <iframe
-                                        src={previewDoc.file_url}
-                                        className="w-full h-full rounded-xl"
-                                        title="preview"
-                                    />
-                                )}
-
-                                {/* FALLBACK */}
-                                {!previewDoc.file_url.match(/\.(jpg|jpeg|png|pdf)$/i) && (
-                                    <div className="text-center text-gray-500">
-                                        <p className="text-lg font-medium">Preview not available</p>
-                                        <button
-                                            onClick={() => window.open(previewDoc.file_url, "_blank")}
-                                            className="mt-3 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                                        >
-                                            Open File
-                                        </button>
-                                    </div>
-                                )}
-
-                            </div>
-                        </div>
-
-                        {/* BOTTOM TOOLBAR (OPTIONAL LIKE IMAGE) */}
-                        <div className="flex justify-center mt-3">
-                            <div className="bg-black/60 text-white px-4 py-2 rounded-full flex items-center gap-4 text-sm shadow-lg">
-                                <span>🔍</span>
-                                <span>➖</span>
-                                <span>➕</span>
-                                <span>⤢</span>
-                            </div>
-                        </div>
-
+                    <div {...handlers} className="w-full flex justify-center px-4">
+                        {paginatedDocs[previewIndex].file_url.match(/\.(jpg|png|jpeg)$/i) ? (
+                            <img
+                                src={paginatedDocs[previewIndex].file_url}
+                                className="max-h-[80vh]"
+                            />
+                        ) : (
+                            <iframe
+                                src={paginatedDocs[previewIndex].file_url}
+                                className="w-full h-[80vh]"
+                            />
+                        )}
                     </div>
                 </div>
             )}

@@ -43,14 +43,15 @@ function DocumentList({ docs, setDocs, loading, setLoading }) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-md">
+    <div className="bg-white p-4 md:p-6 rounded-2xl shadow-md">
+
       {/* HEADER */}
-      <div className="flex justify-between items-center mb-5">
-        <h3 className="font-semibold text-gray-800 text-lg">
+      <div className="flex justify-between items-center mb-4 md:mb-5">
+        <h3 className="font-semibold text-gray-800 text-base md:text-lg">
           Recent Documents
         </h3>
 
-        <span className="text-indigo-600 text-sm cursor-pointer hover:underline">
+        <span className="text-indigo-600 text-xs md:text-sm cursor-pointer hover:underline">
           View All
         </span>
       </div>
@@ -65,42 +66,44 @@ function DocumentList({ docs, setDocs, loading, setLoading }) {
           No documents uploaded yet.
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
+
           {docs.map((doc) => (
             <div
               key={doc.id}
-              className="group bg-white border border-gray-200 rounded-xl p-4 hover:border-indigo-300 hover:shadow-md transition-all duration-200 cursor-pointer"
+              className="group bg-white border border-gray-200 rounded-xl p-4 hover:border-indigo-300 hover:shadow-md transition-all duration-200"
             >
+
               {/* ICON */}
               <div className="text-3xl mb-3 flex items-center justify-center">
                 {getIcon(doc.file_url)}
               </div>
 
               {/* TITLE */}
-              <p className="text-sm font-medium text-gray-800 truncate flex items-center justify-center">
+              <p className="text-sm font-medium text-gray-800 truncate text-center">
                 {doc.title}
               </p>
 
               {/* CATEGORY */}
-              <p className="text-xs text-gray-500 mt-1 flex items-center justify-center">
+              <p className="text-xs text-gray-500 mt-1 text-center">
                 {doc.category_display}
               </p>
 
-              {/* META (fake for now, you can replace later) */}
-              <p className="text-xs text-gray-400 mt-1 flex items-center justify-center">
+              {/* DATE */}
+              <p className="text-xs text-gray-400 mt-1 text-center">
                 {doc.created_at
                   ? new Date(doc.created_at).toLocaleString("en-IN", {
                     day: "2-digit",
                     month: "short",
                     year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit"
                   })
                   : "Recently added"}
               </p>
 
               {/* ACTIONS */}
-              <div className="flex justify-between items-center mt-4 text-xs opacity-0 group-hover:opacity-100 transition">
+              <div className="flex justify-between items-center mt-4 text-xs 
+              opacity-100 md:opacity-0 md:group-hover:opacity-100 transition"
+              >
                 {doc.file_url && (
                   <a
                     href={doc.file_url}
@@ -119,6 +122,7 @@ function DocumentList({ docs, setDocs, loading, setLoading }) {
                   <FiTrash2 /> Delete
                 </button>
               </div>
+
             </div>
           ))}
         </div>
