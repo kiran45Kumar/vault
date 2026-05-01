@@ -30,7 +30,9 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG") == "True"
 
-ALLOWED_HOSTS = ["*"]  # Later restrict to your Koyeb domain
+ALLOWED_HOSTS = [
+                "*",
+                  "vault-rlho.onrender.com",]  # Later restrict to your Koyeb domain
 
 
 # Application definition
@@ -63,8 +65,11 @@ MIDDLEWARE = [
 ]
 
 # cors settings
+
+CORS_ALLOW_ALL_ORIGINS = True   # for now
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "https://vault-rlho.onrender.com",
 ]
 
 # throttling
