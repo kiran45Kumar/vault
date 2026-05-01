@@ -5,9 +5,11 @@ import DocumentList from "../components/DocumentList";
 
 function DashboardHome() {
   const [docs, setDocs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchDocs = async () => {
     const token = localStorage.getItem("token");
+    setLoading(true);
 
     const res = await api.get("/documents/", {
       headers: {
@@ -16,6 +18,7 @@ function DashboardHome() {
     });
 
     setDocs(res.data.results || res.data || []);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -26,7 +29,7 @@ function DashboardHome() {
   return (
     <div className="space-y-8">
       <UploadDocument onUpload={fetchDocs} />
-      <DocumentList docs={docs} setDocs={setDocs} />
+      <DocumentList docs={docs} setDocs={setDocs} loading={loading} setLoading = {setLoading} />
     </div>
   );
 }

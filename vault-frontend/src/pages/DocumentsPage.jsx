@@ -282,88 +282,88 @@ function DocumentsPage() {
 
             {/* MODAL */}
             {previewDoc && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md">
 
-                    {/* CONTAINER */}
-                    <div className="w-[90%] h-[90%] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+                    {/* MAIN WRAPPER */}
+                    <div className="relative w-[85%] h-[85%] flex flex-col">
 
-                        {/* HEADER BAR */}
-                        <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50">
+                        {/* TOP BAR */}
+                        <div className="flex items-center justify-between px-4 py-3 text-white">
 
-                            {/* FILE INFO */}
+                            {/* LEFT */}
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 text-lg">
-                                    📄
-                                </div>
-
-                                <div>
-                                    <p className="text-sm font-medium text-gray-800 truncate max-w-75">
-                                        {previewDoc.title}
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                        {previewDoc.file_url.split(".").pop().toUpperCase()}
-                                    </p>
-                                </div>
+                                <span className="text-lg">📄</span>
+                                <p className="text-sm font-medium truncate max-w-100">
+                                    {previewDoc.title}
+                                </p>
                             </div>
 
-                            {/* ACTIONS */}
-                            <div className="flex items-center gap-2">
-
-                                {/* DOWNLOAD */}
+                            {/* RIGHT */}
+                            <div className="flex items-center gap-3">
                                 <button
                                     onClick={() => window.open(previewDoc.file_url, "_blank")}
-                                    className="px-3 py-1.5 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition"
+                                    className="text-sm px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition"
                                 >
-                                    Download
+                                    ⬇ Download
                                 </button>
 
-                                {/* CLOSE */}
                                 <button
                                     onClick={() => setPreviewDoc(null)}
-                                    className="p-2 rounded-lg hover:bg-gray-200 transition"
+                                    className="text-lg hover:opacity-70"
                                 >
                                     ✕
                                 </button>
                             </div>
                         </div>
 
-                        {/* CONTENT AREA */}
-                        <div className="flex-1 bg-gray-100 flex items-center justify-center p-4">
+                        {/* PREVIEW CARD */}
+                        <div className="flex-1 flex items-center justify-center">
 
-                            {/* IMAGE PREVIEW */}
-                            {previewDoc.file_url.match(/\.(jpg|jpeg|png)$/i) && (
-                                <div className="w-full h-full flex items-center justify-center">
+                            <div className="bg-white rounded-2xl shadow-2xl w-full h-full flex items-center justify-center p-4">
+
+                                {/* IMAGE */}
+                                {previewDoc.file_url.match(/\.(jpg|jpeg|png)$/i) && (
                                     <img
                                         src={previewDoc.file_url}
-                                        className="max-h-full max-w-full rounded-lg shadow-md object-contain"
+                                        className="max-h-full max-w-full object-contain rounded-xl"
                                     />
-                                </div>
-                            )}
+                                )}
 
-                            {/* PDF PREVIEW */}
-                            {previewDoc.file_url.match(/\.pdf$/i) && (
-                                <div className="w-full h-full bg-white rounded-lg shadow-md overflow-hidden border">
+                                {/* PDF */}
+                                {previewDoc.file_url.match(/\.pdf$/i) && (
                                     <iframe
                                         src={previewDoc.file_url}
+                                        className="w-full h-full rounded-xl"
                                         title="preview"
-                                        className="w-full h-full"
                                     />
-                                </div>
-                            )}
+                                )}
 
-                            {/* FALLBACK */}
-                            {!previewDoc.file_url.match(/\.(jpg|jpeg|png|pdf)$/i) && (
-                                <div className="text-center text-gray-500">
-                                    <p className="text-lg font-medium">Preview not available</p>
-                                    <button
-                                        onClick={() => window.open(previewDoc.file_url, "_blank")}
-                                        className="mt-3 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                                    >
-                                        Open File
-                                    </button>
-                                </div>
-                            )}
+                                {/* FALLBACK */}
+                                {!previewDoc.file_url.match(/\.(jpg|jpeg|png|pdf)$/i) && (
+                                    <div className="text-center text-gray-500">
+                                        <p className="text-lg font-medium">Preview not available</p>
+                                        <button
+                                            onClick={() => window.open(previewDoc.file_url, "_blank")}
+                                            className="mt-3 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                                        >
+                                            Open File
+                                        </button>
+                                    </div>
+                                )}
+
+                            </div>
                         </div>
+
+                        {/* BOTTOM TOOLBAR (OPTIONAL LIKE IMAGE) */}
+                        <div className="flex justify-center mt-3">
+                            <div className="bg-black/60 text-white px-4 py-2 rounded-full flex items-center gap-4 text-sm shadow-lg">
+                                <span>🔍</span>
+                                <span>➖</span>
+                                <span>➕</span>
+                                <span>⤢</span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             )}

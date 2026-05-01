@@ -2,7 +2,7 @@ import api from "../api/axios";
 import { toast } from "react-toastify";
 import { FiFileText, FiImage, FiFile, FiTrash2, FiEye } from "react-icons/fi";
 
-function DocumentList({ docs, setDocs }) {
+function DocumentList({ docs, setDocs, loading, setLoading }) {
   const handleDelete = async (id) => {
     const token = localStorage.getItem("token");
 
@@ -17,6 +17,8 @@ function DocumentList({ docs, setDocs }) {
       toast.success("Deleted");
     } catch {
       toast.error("Delete failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -43,7 +45,11 @@ function DocumentList({ docs, setDocs }) {
       </div>
 
       {/* EMPTY */}
-      {docs.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-10 text-gray-400 text-sm">
+          Loading documents...
+        </div>
+      ) : docs.length === 0 ? (
         <div className="text-center py-10 text-gray-400 text-sm">
           No documents uploaded yet.
         </div>

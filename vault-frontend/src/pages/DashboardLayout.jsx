@@ -27,7 +27,7 @@ function DashboardLayout() {
             🛡 <span>Vault</span>
           </h1>
 
-          <nav className="flex flex-col gap-2 text-sm">
+          <nav className="flex flex-col gap-7 text-sm">
             {/* DASHBOARD */}
             <Link
               to="/dashboard"
