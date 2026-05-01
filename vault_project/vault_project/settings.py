@@ -68,6 +68,7 @@ MIDDLEWARE = [
 
 CORS_ALLOW_ALL_ORIGINS = True   # for now
 CORS_ALLOWED_ORIGINS = [
+    "https://miniblob.netlify.app"
     "http://localhost:5173",
 ]
 
