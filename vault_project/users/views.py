@@ -6,13 +6,17 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import RegisterSerializer, LoginSerializer
+from .serializers import RegisterSerializer, LoginSerializer, UpdateProfileSerializer
 from django.contrib.auth.hashers import check_password
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.throttling import AnonRateThrottle
+
+
 # Create your views here.
 class LoginThrottle(AnonRateThrottle):
     rate = "10/min"
+
+
 class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -21,8 +25,10 @@ class RegisterView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class LoginView(APIView):
     throttle_classes = [LoginThrottle]
+
     def post(self, request):
         email = request.data.get("email")
         password = request.data.get("password")
@@ -35,13 +41,13 @@ class LoginView(APIView):
         if check_password(password, user.password):
             refresh = RefreshToken.for_user(user)
 
-            return Response({
-                "refresh": str(refresh),
-                "access": str(refresh.access_token)
-            })
+            return Response(
+                {"refresh": str(refresh), "access": str(refresh.access_token)}
+            )
 
         return Response({"error": "Invalid credentials"}, status=401)
-    
+
+
 class ProfileView(APIView):
 
     permission_classes = [IsAuthenticated]
@@ -49,8 +55,18 @@ class ProfileView(APIView):
     def get(self, request):
         user = request.user
 
-        return Response({
-            "id": user.id,
-            "username": user.username,
-            "email": user.email
-        })
+        return Response({"id": user.id, "username": user.username, "email": user.email})
+
+
+class UpdateProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request):  # use PATCH
+        user = request.user
+        serializer = UpdateProfileSerializer(user, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

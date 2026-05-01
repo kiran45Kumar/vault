@@ -6,7 +6,7 @@ import DocumentList from "../components/DocumentList";
 function DashboardHome() {
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const token = localStorage.getItem("token");
   const fetchDocs = async () => {
     const token = localStorage.getItem("token");
     setLoading(true);
@@ -25,6 +25,9 @@ function DashboardHome() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchDocs();
   }, []);
+  if (!token) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="space-y-8">

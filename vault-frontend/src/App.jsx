@@ -12,6 +12,7 @@ import DashboardLayout from "./pages/DashboardLayout";
 import DashboardHome from "./pages/DashboardHome";
 import UploadPage from "./pages/UploadPage";
 import DocumentsPage from "./pages/DocumentsPage";
+import Profile from "./pages/ProfilePage";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
@@ -29,7 +30,7 @@ function App() {
           {/* FUTURE ROUTES */}
           <Route path="upload" element={<UploadPage />} />
           <Route path="documents" element={<DocumentsPage />} />
-          {/* <Route path="profile" element={<Profile />} /> */}
+          <Route path="profile" element={<Profile />} />
         </Route>
       </Routes>
       <ToastContainer />

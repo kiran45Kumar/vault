@@ -108,7 +108,7 @@ WSGI_APPLICATION = "vault_project.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
+# production db
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -119,8 +119,17 @@ DATABASES = {
         "OPTIONS": {"sslmode": "require"},
     }
 }
-
-
+# local db
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.mysql",
+#         "NAME": os.getenv("DATABASE_NAME_LOCAL"),
+#         "USER": os.getenv("DATABASE_USER_LOCAL"),
+#         "PASSWORD": os.getenv("DATABASE_PASSWORD_LOCAL"),
+#         "HOST": os.getenv("DATABASE_HOST_LOCAL"),
+#         "PORT": os.getenv("DATABASE_PORT_LOCAL"),
+#     }
+# }
 # AWS S3 Configuration
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")

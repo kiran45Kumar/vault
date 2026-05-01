@@ -8,9 +8,34 @@ import {
   FiBell,
 } from "react-icons/fi";
 import { Link, useLocation } from "react-router-dom";
+import api from "../api/axios";
+import { useEffect, useState } from "react";
 function DashboardLayout() {
   const token = localStorage.getItem("token");
   const location = useLocation();
+  const [initial, setInitial] = useState("A");
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await api.get("/profile/", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        const username = res.data.username;
+
+        if (username) {
+          setInitial(username.charAt(0).toUpperCase());
+          console.log("Profile data:", res.data);
+        }
+      } catch (err) {
+        console.log("Failed to fetch profile", err);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   if (!token) return <Navigate to="/" replace />;
 
@@ -38,12 +63,11 @@ function DashboardLayout() {
 
             {/* DOCUMENTS */}
             <Link
-                  to="/dashboard/documents"
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
-                location.pathname === "/dashboard/documents"
+              to="/dashboard/documents"
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${location.pathname === "/dashboard/documents"
                   ? "bg-indigo-50 text-indigo-600 font-medium"
                   : "text-gray-600 hover:bg-gray-100"
-              }`}
+                }`}
             >
               <FiFileText /> My Documents
             </Link>
@@ -105,7 +129,7 @@ function DashboardLayout() {
             <FiBell className="text-gray-500 text-lg cursor-pointer" />
 
             <div className="w-9 h-9 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-              A
+              {initial}
             </div>
           </div>
         </header>

@@ -24,7 +24,7 @@ function Login({ setToken }) {
       const response = await api.post("/login/", { email, password });
 
       localStorage.setItem("token", response.data.access);
-      setToken(response.data.access); 
+      setToken(response.data.access);
       toast.success("Login successful!");
       navigate("/dashboard");
     } catch (error) {

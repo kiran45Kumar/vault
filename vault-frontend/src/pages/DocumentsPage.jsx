@@ -120,6 +120,7 @@ function DocumentsPage() {
     const getType = (url) =>
         url ? url.split(".").pop().toUpperCase() : "—";
 
+    if (!token) return <Navigate to="/" replace />;
     return (
         <div className="space-y-6">
 
