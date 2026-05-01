@@ -79,7 +79,7 @@ export default function Profile() {
     );
   }
 
-  if (!token) return <Navigate to="/" replace />;
+  if (!token) return <Navigate to="/login" replace />;
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">

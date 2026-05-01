@@ -92,7 +92,7 @@ function DocumentsPage() {
         trackMouse: true,
     });
 
-    if (!token) return <Navigate to="/" replace />;
+    if (!token) return <Navigate to="/login" replace />;
 
     return (
         <div className="space-y-6">

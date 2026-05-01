@@ -13,13 +13,15 @@ import DashboardHome from "./pages/DashboardHome";
 import UploadPage from "./pages/UploadPage";
 import DocumentsPage from "./pages/DocumentsPage";
 import Profile from "./pages/ProfilePage";
+import VaultLanding from "./pages/VaultLanding";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login  setToken={setToken} />} />
+        <Route path="/" element={<VaultLanding />} />
+        <Route path="/login" element={<Login  setToken={setToken} />} />
         <Route path="/register" element={<Register />} />
         <Route
           path="/dashboard"

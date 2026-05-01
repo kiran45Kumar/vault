@@ -36,7 +36,7 @@ function Register() {
       });
 
       toast.success("User Registered Successfully");
-      navigate("/");
+      navigate("/login");
     } catch (error) {
       if (error.response?.status === 429) {
         toast.error("Too many requests. Try again later.");
@@ -144,7 +144,7 @@ function Register() {
             <p className="text-center text-sm text-gray-500 mt-2">
               Already have an account?{" "}
               <span
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/login")}
                 className="text-indigo-600 font-medium cursor-pointer hover:underline"
               >
                 Login
