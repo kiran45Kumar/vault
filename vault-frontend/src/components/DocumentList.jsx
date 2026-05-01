@@ -15,8 +15,19 @@ function DocumentList({ docs, setDocs, loading, setLoading }) {
 
       setDocs((prev) => prev.filter((doc) => doc.id !== id));
       toast.success("Deleted");
-    } catch {
-      toast.error("Delete failed");
+    } catch (err) {
+      console.log(err.response); // debug
+
+      if (err.response && err.response.data) {
+        const errors = err.response.data;
+
+        // Loop through backend errors
+        Object.keys(errors).forEach((key) => {
+          toast.error(errors[key][0]); // show first error
+        });
+      } else {
+        toast.error("Something went wrong");
+      }
     } finally {
       setLoading(false);
     }

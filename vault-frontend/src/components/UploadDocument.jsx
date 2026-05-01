@@ -32,7 +32,7 @@ function UploadDocument({ onUpload }) {
           Authorization: `Bearer ${token}`,
         },
       });
-      
+
       toast.success("Uploaded successfully!");
 
       setFile(null);
@@ -42,7 +42,18 @@ function UploadDocument({ onUpload }) {
 
       onUpload();
     } catch (err) {
-      toast.error("Upload failed", err.response?.data?.detail || "");
+      console.log(err.response); // debug
+
+      if (err.response && err.response.data) {
+        const errors = err.response.data;
+
+        // Loop through backend errors
+        Object.keys(errors).forEach((key) => {
+          toast.error(errors[key][0]); // show first error
+        });
+      } else {
+        toast.error("Something went wrong");
+      }
     } finally {
       setLoading(false);
     }
