@@ -69,7 +69,6 @@ MIDDLEWARE = [
 CORS_ALLOW_ALL_ORIGINS = True   # for now
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://vault-rlho.onrender.com",
 ]
 
 # throttling
