@@ -1,9 +1,82 @@
 import api from "../api/axios";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
-import { FiFileText, FiImage, FiFile, FiTrash2, FiEye } from "react-icons/fi";
-
+import { FiFileText, FiImage, FiFile, FiTrash2, FiEye, FiX } from "react-icons/fi";
+import { useState } from "react";
 function DocumentList({ docs, setDocs, loading, setLoading }) {
+  const [showModal, setShowModal] = useState(false);
+  const [password, setPassword] = useState("");
+  const [selectedDoc, setSelectedDoc] = useState(null);
+  const [unlockToken, setUnlockToken] = useState({});
+  const [loadingView, setLoadingView] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+
+  const handleView = async (doc, tokenMap = unlockToken) => {
+    setLoadingView(true);
+
+    try {
+      const res = await api.get(`/documents/${doc.id}/view/`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          ...(tokenMap?.[doc.id]
+            ? { "X-Unlock-Token": tokenMap[doc.id] }
+            : {})
+        }
+      });
+
+      window.open(res.data.file_url, "_blank");
+
+    } catch (err) {
+      if (err.response?.data?.locked) {
+        setSelectedDoc(doc);
+        setShowModal(true);
+      } else {
+        toast.error("Failed to open file");
+      }
+    } finally {
+      setLoadingView(false);
+    }
+  };
+
+
+  const handleUnlock = async () => {
+    setLoadingView(true);
+
+    try {
+      const res = await api.post(
+        `/documents/${selectedDoc.id}/unlock/`,
+        { password },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        }
+      );
+
+      const token = res.data.unlock_token;
+
+      // create updated token map FIRST
+      const updatedTokens = {
+        ...unlockToken,
+        [selectedDoc.id]: token
+      };
+
+      setUnlockToken(updatedTokens);
+
+      setShowModal(false);
+      setPassword("");
+
+      toast.success("Unlocked 🔓");
+
+      // 🔥 IMPORTANT: pass fresh token directly (NOT state)
+      handleView(selectedDoc, updatedTokens);
+
+    } catch {
+      toast.error("Wrong password");
+    } finally {
+      setLoadingView(false);
+    }
+  };
   const handleDelete = async (id) => {
     const token = localStorage.getItem("token");
 
@@ -92,6 +165,10 @@ function DocumentList({ docs, setDocs, loading, setLoading }) {
                 {doc.category_display}
               </p>
 
+              <p className="text-xs text-center mt-1">
+                {doc.is_locked ? "🔒 Locked" : "🔓 Unlocked"}
+              </p>
+
               {/* DATE */}
               <p className="text-xs text-gray-400 mt-1 text-center">
                 {doc.created_at
@@ -108,14 +185,12 @@ function DocumentList({ docs, setDocs, loading, setLoading }) {
               opacity-100 md:opacity-0 md:group-hover:opacity-100 transition"
               >
                 {doc.file_url && (
-                  <a
-                    href={doc.file_url}
-                    target="_blank"
-                    rel="noreferrer"
+                  <button
+                    onClick={() => handleView(doc)}
                     className="flex items-center gap-1 text-indigo-600 hover:underline"
                   >
                     <FiEye /> View
-                  </a>
+                  </button>
                 )}
 
                 <button
@@ -128,6 +203,52 @@ function DocumentList({ docs, setDocs, loading, setLoading }) {
 
             </div>
           ))}
+
+          {showModal && (
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-xl w-80 space-y-4">
+
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="ml-auto flex items-center"
+                >
+                  <FiX />
+                </button>
+                <h3 className="text-lg font-semibold">Enter Password</h3>
+
+                <div className="relative">
+                  <input
+                    type={showPass ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full border p-2 rounded pr-10"
+                    placeholder="Password"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPass((p) => !p)}
+                    className="absolute right-2 top-2 text-xs text-gray-500"
+                  >
+                    {showPass ? "Hide" : "Show"}
+                  </button>
+                </div>
+
+                <button
+                  onClick={handleUnlock}
+                  disabled={loadingView}
+                  className="w-full bg-indigo-600 text-white py-2 rounded flex justify-center"
+                >
+                  {loadingView ? (
+                    <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4"></span>
+                  ) : (
+                    "Unlock & View"
+                  )}
+                </button>
+
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

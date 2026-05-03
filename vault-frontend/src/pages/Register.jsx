@@ -89,6 +89,7 @@ function Register() {
               placeholder="Enter your username"
               className="border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               onChange={(e) => setUsername(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleRegister()}
             />
 
             {/* EMAIL */}
@@ -97,6 +98,7 @@ function Register() {
               placeholder="Enter your email"
               className="border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleRegister()}
             />
 
             {/* PASSWORD WITH TOGGLE */}
@@ -106,6 +108,8 @@ function Register() {
                 placeholder="Create a password"
                 className="border border-gray-200 rounded-lg p-3 pr-10 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleRegister()}
+
               />
 
               <span
@@ -119,13 +123,12 @@ function Register() {
             {/* PASSWORD STRENGTH */}
             {password && (
               <p
-                className={`text-xs ${
-                  getStrength() === "Strong"
+                className={`text-xs ${getStrength() === "Strong"
                     ? "text-green-600"
                     : getStrength() === "Medium"
                       ? "text-yellow-600"
                       : "text-red-500"
-                }`}
+                  }`}
               >
                 Strength: {getStrength()}
               </p>

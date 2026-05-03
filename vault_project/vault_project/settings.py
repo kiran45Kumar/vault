@@ -71,7 +71,11 @@ CORS_ALLOWED_ORIGINS = [
     "https://miniblob.netlify.app"
     "http://localhost:5173",
 ]
-
+CORS_ALLOW_HEADERS = [
+    "authorization",
+    "content-type",
+    "x-unlock-token",  # ✅ ADD THIS
+]
 # throttling
 REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_CLASSES": [

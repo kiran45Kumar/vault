@@ -81,6 +81,7 @@ function Login({ setToken }) {
               placeholder="Enter your email"
               className="border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e)=>{e.key === 'Enter' && handleLogin()}}
             />
 
             {/* PASSWORD WITH TOGGLE */}
@@ -90,6 +91,7 @@ function Login({ setToken }) {
                 placeholder="Enter your password"
                 className="border border-gray-200 rounded-lg p-3 pr-10 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 onChange={(e) => setPassword(e.target.value)}
+                 onKeyDown={(e)=>{e.key === 'Enter' && handleLogin()}}
               />
 
               <span

@@ -1,24 +1,119 @@
-from rest_framework import viewsets, permissions
-from .models import Document
+from rest_framework.response import Response
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from .serializers import DocumentSerializer
+from rest_framework.decorators import action
+from django.contrib.auth.hashers import make_password, check_password
 from rest_framework.throttling import UserRateThrottle
-# Create your views here.
+import boto3
+from django.conf import settings
+from .models import Document
+from .serializers import DocumentSerializer
+from datetime import datetime, timedelta
+import jwt  
+
+
 class UploadThrottle(UserRateThrottle):
     rate = "20/hour"
+
+
 class DocumentViewSet(viewsets.ModelViewSet):
     serializer_class = DocumentSerializer
     permission_classes = [IsAuthenticated]
-
-    def get_throttles(self):
-        if self.action == 'create':  # POST only
-            return [UploadThrottle()]
-        return []  # no throttle for GET
 
     def get_queryset(self):
         return Document.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-        obj = serializer.instance
-        print("FILE URL:", obj.file.url)
+
+    def get_throttles(self):
+        if self.action == "create":
+            return [UploadThrottle()]
+        return []
+
+    # LOCK
+    @action(detail=True, methods=["post"])
+    def lock(self, request, pk=None):
+        doc = self.get_object()
+
+        password = request.data.get("password")
+        if not password:
+            return Response({"error": "Password required"}, status=400)
+
+        doc.is_locked = True
+        doc.password_hash = make_password(password)
+        doc.save()
+        print(doc.is_locked)
+        return Response({"message": "Document locked"})
+
+    # UNLOCK
+    @action(detail=True, methods=["post"])
+    def unlock(self, request, pk=None):
+        doc = self.get_object()
+
+        password = request.data.get("password")
+        if not password:
+            return Response({"error": "Password required"}, status=400)
+
+        if not check_password(password, doc.password_hash):
+            return Response({"error": "Wrong password"}, status=400)
+
+        # 🔐 create short-lived token (5 min)
+        payload = {
+            "doc_id": str(doc.id),
+            "user_id": request.user.id,
+            "exp": datetime.utcnow() + timedelta(minutes=5),
+        }
+
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
+
+        return Response({"unlock_token": token})
+
+    # VIEW
+
+    @action(detail=True, methods=["get"])
+    def view(self, request, pk=None):
+        doc = self.get_object()
+
+        if doc.is_locked:
+            token = request.headers.get("X-Unlock-Token")
+            print("UNLOCK TOKEN RECEIVED:", request.headers.get("X-Unlock-Token"))
+
+            if not token:
+                return Response(
+                    {"locked": True, "message": "Unlock token required"}, status=403
+                )
+
+            try:
+                payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+
+                # validate token
+                if (
+                    payload["doc_id"] != str(doc.id)
+                    or payload["user_id"] != request.user.id
+                ):
+                    return Response({"error": "Invalid token"}, status=403)
+
+            except jwt.ExpiredSignatureError:
+                return Response({"error": "Token expired"}, status=403)
+            except jwt.InvalidTokenError:
+                return Response({"error": "Invalid token"}, status=403)
+
+        # generate S3 URL
+        s3 = boto3.client(
+            "s3",
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=settings.AWS_S3_REGION_NAME,
+        )
+
+        url = s3.generate_presigned_url(
+            "get_object",
+            Params={
+                "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
+                "Key": doc.file.name,
+            },
+            ExpiresIn=300,
+        )
+
+        return Response({"file_url": url})

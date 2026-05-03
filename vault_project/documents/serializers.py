@@ -17,6 +17,7 @@ class DocumentSerializer(serializers.ModelSerializer):
             "category_name",
             "category_display",
             "file_url",
+            "is_locked",
             "created_at",
             "updated_at"
         ]
