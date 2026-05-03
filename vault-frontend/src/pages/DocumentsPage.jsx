@@ -79,8 +79,16 @@ function DocumentsPage() {
         currentPage * itemsPerPage
     );
 
-    const getType = (url) =>
-        url ? url.split(".").pop().toUpperCase() : "—";
+    const getType = (url) => {
+        if (!url) return "—";
+
+        try {
+            const pathname = new URL(url).pathname;
+            return pathname.split(".").pop().toUpperCase();
+        } catch {
+            return "—";
+        }
+    };
 
     // 🔥 SWIPE HANDLERS
     const handlers = useSwipeable({
@@ -159,36 +167,66 @@ function DocumentsPage() {
             {/* DESKTOP TABLE */}
             <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow">
                 <table className="w-full text-sm min-w-175">
-                    <thead className="bg-gray-50 text-xs uppercase">
+                    <thead className="bg-gray-50 text-xs uppercase text-gray-600">
                         <tr>
-                            <th onClick={() => handleSort("title")} className="px-6 py-4">Name</th>
-                            <th className="px-6 py-4">Type</th>
-                            <th className="px-6 py-4">Category</th>
-                            <th onClick={() => handleSort("created_at")} className="px-6 py-4">Date</th>
+                            <th onClick={() => handleSort("title")} className="px-6 py-4 text-left cursor-pointer">Name</th>
+                            <th className="px-6 py-4 text-left">Type</th>
+                            <th className="px-6 py-4 text-left">Category</th>
+                            <th onClick={() => handleSort("created_at")} className="px-6 py-4 text-left cursor-pointer">Date</th>
                             <th className="px-6 py-4 text-right">Actions</th>
                         </tr>
                     </thead>
 
-                    <tbody>
+                    <tbody className="">
                         {paginatedDocs.map((doc, index) => (
-                            <tr key={doc.id} className="  ">
-                                <td className="px-6 py-4">{doc.title}</td>
-                                <td className="px-6 py-4">{getType(doc.file_url)}</td>
-                                <td className="px-6 py-4">{doc.category_display}</td>
-                                <td className="px-6 py-4">
+                            <tr key={doc.id} className="hover:bg-gray-50 transition">
+
+                                <td className="px-6 py-4 font-medium text-gray-800">
+                                    {doc.title}
+                                </td>
+
+                                <td className="px-6 py-4 text-gray-500">
+                                    {getType(doc.file_url)}
+                                </td>
+
+                                <td className="px-6 py-4 text-gray-500">
+                                    {doc.category_display}
+                                </td>
+
+                                <td className="px-6 py-4 text-gray-500">
                                     {new Date(doc.created_at).toLocaleDateString()}
                                 </td>
-                                <td className="px-6 py-4 text-right flex justify-end gap-2">
-                                    <button onClick={() => setPreviewIndex(index)}>
-                                        <FiEye />
-                                    </button>
-                                    <button onClick={() => handleDelete(doc.id)}>
-                                        <FiTrash2 />
-                                    </button>
-                                    <a href={doc.file_url} target="_blank">
-                                        <FiDownload />
-                                    </a>
+
+                                {/* FIXED ACTIONS COLUMN */}
+                                <td className="px-6 py-4">
+                                    <div className="flex justify-end items-center gap-3">
+
+                                        <button
+                                            onClick={() => setPreviewIndex(index)}
+                                            className="p-2 rounded-lg hover:bg-gray-100 transition"
+                                        >
+                                            <FiEye />
+                                        </button>
+
+                                        <button
+                                            onClick={() => handleDelete(doc.id)}
+                                            className="p-2 rounded-lg hover:bg-red-100 text-red-500 transition"
+                                        >
+                                            <FiTrash2 />
+                                        </button>
+
+                                        <a
+                                            href={doc.file_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="p-2 rounded-lg hover:bg-gray-100 transition"
+                                        >
+                                            <FiDownload />
+                                        </a>
+
+                                    </div>
                                 </td>
+
                             </tr>
                         ))}
                     </tbody>

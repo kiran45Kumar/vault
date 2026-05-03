@@ -1,5 +1,6 @@
 import api from "../api/axios";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import { FiFileText, FiImage, FiFile, FiTrash2, FiEye } from "react-icons/fi";
 
 function DocumentList({ docs, setDocs, loading, setLoading }) {
@@ -51,9 +52,11 @@ function DocumentList({ docs, setDocs, loading, setLoading }) {
           Recent Documents
         </h3>
 
-        <span className="text-indigo-600 text-xs md:text-sm cursor-pointer hover:underline">
-          View All
-        </span>
+        <Link to="/dashboard/documents" className="hidden md:inline-block">
+          <span className="text-indigo-600 text-xs md:text-sm cursor-pointer hover:underline">
+            View All
+          </span>
+        </Link>
       </div>
 
       {/* EMPTY */}

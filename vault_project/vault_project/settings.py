@@ -121,7 +121,7 @@ DATABASES = {
 }
 # local db
 # DATABASES = {
-#     "default": {
+#     "default": {    
 #         "ENGINE": "django.db.backends.mysql",
 #         "NAME": os.getenv("DATABASE_NAME_LOCAL"),
 #         "USER": os.getenv("DATABASE_USER_LOCAL"),
@@ -149,9 +149,9 @@ AWS_S3_SIGNATURE_NAME = "s3v4"
 AWS_S3_ADDRESSING_STYLE = "virtual"
 AWS_S3_ENDPOINT_URL = "https://s3.ap-south-1.amazonaws.com"
 
-AWS_QUERYSTRING_AUTH = False
-AWS_S3_FILE_OVERWRITE = False
+AWS_QUERYSTRING_AUTH = True
 AWS_DEFAULT_ACL = None
+AWS_S3_FILE_OVERWRITE = False
 
 
 # Password validation
