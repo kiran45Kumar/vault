@@ -210,7 +210,7 @@ function DocumentsPage() {
 
     const confirmLock = async () => {
         setLockLoading(true);
-
+        console.log(lockPassword)
         try {
             await api.post(
                 `/documents/${lockDocId}/lock/`,
@@ -551,20 +551,31 @@ function DocumentsPage() {
                     <div className="bg-white p-6 rounded-xl w-80 space-y-4">
 
                         <button
-                            onClick={closePasswordModal}
-                            className="absolute top-3 right-3 text-gray-500 hover:text-black"
+                            onClick={() => setShowLockModal(false)}
+                            className="ml-auto flex items-center justify-end"
                         >
                             <FiX />
                         </button>
                         <h3 className="text-lg font-semibold">Set Password</h3>
 
-                        <input
-                            type="password"
-                            value={lockPassword}
-                            onChange={(e) => setLockPassword(e.target.value)}
-                            className="w-full border p-2 rounded"
-                            placeholder="Enter password"
-                        />
+                        <div className="relative">
+                            <input
+                                ref={passwordRef}
+                                type={showPass ? "text" : "password"}
+                                value={lockPassword}
+                                onChange={(e) => setLockPassword(e.target.value)}
+                                className="w-full border p-2 rounded pr-10"
+                                placeholder="Password"
+                            />
+
+                            <button
+                                type="button"
+                                onClick={() => setShowPass(prev => !prev)}
+                                className="absolute right-2 top-2 text-sm text-gray-500"
+                            >
+                                {showPass ? "Hide" : "Show"}
+                            </button>
+                        </div>
 
                         <button
                             onClick={confirmLock}

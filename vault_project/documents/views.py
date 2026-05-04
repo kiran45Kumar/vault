@@ -35,6 +35,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def lock(self, request, pk=None):
         doc = self.get_object()
+        print("LOCKING DOCUMENT:", request.data)
 
         password = request.data.get("password")
         if not password:
