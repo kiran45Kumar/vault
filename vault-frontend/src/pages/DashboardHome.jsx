@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import api from "../api/axios";
 import UploadDocument from "../components/UploadDocument";
@@ -8,21 +9,24 @@ function DashboardHome() {
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("token");
   const fetchDocs = async () => {
-    const token = localStorage.getItem("token");
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const res = await api.get("/documents/", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      const res = await api.get("/documents/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    setDocs(res.data.results || res.data || []);
-    setLoading(false);
+      setDocs(res.data.results || res.data || []);
+    } catch (err) {
+      console.error("FETCH DOCS ERROR:", err.response?.data || err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchDocs();
   }, []);
   if (!token) {
@@ -32,7 +36,7 @@ function DashboardHome() {
   return (
     <div className="space-y-8">
       <UploadDocument onUpload={fetchDocs} />
-      <DocumentList docs={docs} setDocs={setDocs} loading={loading} setLoading = {setLoading} />
+      <DocumentList docs={docs} setDocs={setDocs} loading={loading} setLoading={setLoading} />
     </div>
   );
 }
