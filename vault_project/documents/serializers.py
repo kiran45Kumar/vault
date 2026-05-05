@@ -2,6 +2,7 @@ from rest_framework import serializers
 from categories.models import Category
 from .models import Document
 
+
 class DocumentSerializer(serializers.ModelSerializer):
 
     file_url = serializers.SerializerMethodField()
@@ -19,7 +20,7 @@ class DocumentSerializer(serializers.ModelSerializer):
             "file_url",
             "is_locked",
             "created_at",
-            "updated_at"
+            "updated_at",
         ]
 
     def create(self, validated_data):
@@ -28,16 +29,24 @@ class DocumentSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
 
         category, created = Category.objects.get_or_create(
-            name=category_name,
-            user=user
+            name=category_name, user=user
         )
 
-        document = Document.objects.create(
-            category=category,
-            **validated_data
-        )
+        document = Document.objects.create(category=category, **validated_data)
 
         return document
+
+    def update(self, instance, validated_data):
+        category_name = validated_data.pop("category_name", None)
+
+        if category_name:
+            user = self.context["request"].user
+
+            category, _ = Category.objects.get_or_create(name=category_name, user=user)
+
+            instance.category = category
+
+        return super().update(instance, validated_data)
 
     def get_file_url(self, obj):
         if obj.file:

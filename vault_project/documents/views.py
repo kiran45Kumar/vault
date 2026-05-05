@@ -9,7 +9,7 @@ from django.conf import settings
 from .models import Document
 from .serializers import DocumentSerializer
 from datetime import datetime, timedelta
-import jwt  
+import jwt
 
 
 class UploadThrottle(UserRateThrottle):
@@ -21,7 +21,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Document.objects.filter(user=self.request.user)
+        return Document.objects.filter(user=self.request.user, isDeleted=False)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -35,6 +35,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def lock(self, request, pk=None):
         doc = self.get_object()
+        if doc.isDeleted:
+            return Response({"error": "Document is deleted"}, status=404)
         print("LOCKING DOCUMENT:", request.data)
 
         password = request.data.get("password")
@@ -51,7 +53,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def unlock(self, request, pk=None):
         doc = self.get_object()
-
+        if doc.isDeleted:
+            return Response({"error": "Document is deleted"}, status=404)
         password = request.data.get("password")
         if not password:
             return Response({"error": "Password required"}, status=400)
@@ -75,6 +78,9 @@ class DocumentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"])
     def view(self, request, pk=None):
         doc = self.get_object()
+
+        if doc.isDeleted:
+            return Response({"error": "Document is deleted"}, status=404)
 
         if doc.is_locked:
             token = request.headers.get("X-Unlock-Token")
@@ -118,3 +124,48 @@ class DocumentViewSet(viewsets.ModelViewSet):
         )
 
         return Response({"file_url": url})
+
+    def destroy(self, request, *args, **kwargs):
+        doc = self.get_object()
+        doc.isDeleted = True
+        doc.save()
+        return Response({"message": "Moved to trash"}, status=200)
+    
+
+    @action(detail=True, methods=["patch"])
+    def restore(self, request, pk=None):
+        doc = Document.objects.filter(
+            id=pk,
+            user=request.user,
+            isDeleted=True
+        ).first()
+
+        if not doc:
+            return Response({"error": "Not found"}, status=404)
+
+        doc.isDeleted = False
+        doc.save()
+
+        return Response({"message": "Document restored"})
+    @action(detail=False, methods=["get"])
+    def trash(self, request):
+        docs = Document.objects.filter(
+            user=request.user,
+            isDeleted=True
+        )
+
+        serializer = self.get_serializer(docs, many=True)
+        return Response(serializer.data)
+    @action(detail=True, methods=["delete"])
+    def permanent_delete(self, request, pk=None):
+        doc = Document.objects.filter(
+            id=pk,
+            user=request.user,
+            isDeleted=True
+        ).first()
+
+        if not doc:
+            return Response({"error": "Not found"}, status=404)
+
+        doc.delete()
+        return Response({"message": "Deleted permanently"})
