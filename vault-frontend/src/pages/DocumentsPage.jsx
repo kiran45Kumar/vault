@@ -195,8 +195,8 @@ function DocumentsPage() {
             });
 
             setDocs(res.data.results || res.data || []);
-        } catch {
-            toast.error("Failed to load documents");
+        } catch (err)  {
+            toast.error("Failed to load documents", err);
             setReloadLoading(false);
         }
         finally {
