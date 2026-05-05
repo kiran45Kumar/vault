@@ -17,6 +17,7 @@ import {
 } from "react-icons/fi";
 
 import { SlLock } from "react-icons/sl";
+import { bulkMoveToTrash, bulkRestore, bulkPermanentDelete } from "../services/documentService";
 import { useSwipeable } from "react-swipeable";
 import { toast } from "react-toastify";
 
@@ -42,7 +43,18 @@ function DocumentsPage() {
         file: null
     });
 
-    
+
+    const [selectedDocs, setSelectedDocs] = useState([]);
+    const toggleSelect = (id) => {
+        setSelectedDocs(prev =>
+            prev.includes(id)
+                ? prev.filter(i => i !== id)
+                : [...prev, id]
+        );
+    };
+
+    const isSelected = (id) => selectedDocs.includes(id);
+
     const [editLoading, setEditLoading] = useState(false);
 
     const openEditModal = (doc) => {
@@ -508,6 +520,45 @@ function DocumentsPage() {
     });
 
 
+    const handleBulkMoveToTrash = async () => {
+        try {
+            await bulkMoveToTrash(selectedDocs, token);
+
+            toast.success("Selected documents moved to trash");
+            setSelectedDocs([]);
+            fetchDocs();
+
+        } catch {
+            toast.error("Failed to move selected docs");
+        }
+    };
+
+
+    const handleBulkRestore = async () => {
+        try {
+            await bulkRestore(selectedDocs, token);
+
+            toast.success("Restored selected documents");
+            setSelectedDocs([]);
+            fetchDocs();
+
+        } catch {
+            toast.error("Restore failed");
+        }
+    };
+
+    const handleBulkPermanentDelete = async () => {
+        try {
+            await bulkPermanentDelete(selectedDocs, token);
+
+            toast.success("Deleted permanently");
+            setSelectedDocs([]);
+            fetchDocs();
+
+        } catch {
+            toast.error("Permanent delete failed");
+        }
+    };
 
     // const uniqueCategories = [
     //     ...new Set(docs.map((doc) => doc.category_display).filter(Boolean))
@@ -668,6 +719,34 @@ function DocumentsPage() {
 
                         {/* TOP */}
                         <div className="flex justify-between items-start">
+
+                            <div
+                                key={doc.id}
+                                className={`bg-white p-4 rounded-xl shadow border ${isSelected(doc.id) ? "border-indigo-500 bg-indigo-50" : ""
+                                    }`}
+                            >
+
+                                {/* SELECT */}
+                                <div
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                    }}
+                                    className="flex justify-between items-start">
+                                    <input
+                                        type="checkbox"
+                                        checked={isSelected(doc.id)}
+                                        onChange={() => toggleSelect(doc.id)}
+                                    />
+
+                                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                        {getType(doc.file_url)}
+                                    </span>
+                                </div>
+
+                                {/* CONTENT */}
+                                <p className="mt-2 font-medium">{doc.title}</p>
+                                <p className="text-xs text-gray-500">{doc.category_display}</p>
+                            </div>
                             <div>
                                 <p className="font-medium text-gray-800">{doc.title}</p>
                                 <p className="text-xs text-gray-500">
@@ -769,6 +848,23 @@ function DocumentsPage() {
 
                     <thead className="bg-gray-50 text-xs uppercase text-gray-600">
                         <tr>
+                            <th className="px-6 py-4">
+                                <input
+                                    type="checkbox"
+                                    checked={
+                                        paginatedDocs.length > 0 &&
+                                        selectedDocs.length === paginatedDocs.length
+                                    }
+                                    onClick={(e) => e.stopPropagation()}   // ✅ ADD THIS
+                                    onChange={(e) => {
+                                        if (e.target.checked) {
+                                            setSelectedDocs(paginatedDocs.map(d => d.id));
+                                        } else {
+                                            setSelectedDocs([]);
+                                        }
+                                    }}
+                                />
+                            </th>
                             <th onClick={() => handleSort("title")} className="px-6 py-4 text-left cursor-pointer">Name</th>
                             <th className="px-6 py-4 text-left">Type</th>
                             <th className="px-6 py-4 text-left">Category</th>
@@ -784,8 +880,20 @@ function DocumentsPage() {
                             <tr key={doc.id} onClick={() => {
                                 setSelectedDoc(doc);
                                 setShowDetailsModal(true);
-                            }} className="hover:bg-gray-50 cursor-pointer transition">
+                            }}
+                                onKeyDown={(e) => {
+                                    e.stopPropagation();
+                                }}
+                                className="hover:bg-gray-50 cursor-pointer transition">
 
+                                <td className="px-6 py-4">
+                                    <input
+                                        type="checkbox"
+                                        checked={isSelected(doc.id)}
+                                        onClick={(e) => e.stopPropagation()}
+                                        onChange={() => toggleSelect(doc.id)}
+                                    />
+                                </td>
                                 <td className="px-6 py-4 font-medium text-gray-800">
                                     {doc.title}
                                 </td>
@@ -1376,6 +1484,62 @@ function DocumentsPage() {
                             </button>
 
                         </div>
+
+                    </div>
+                </div>
+            )}
+
+            {selectedDocs.length > 0 && (
+                <div className="
+        fixed bottom-4 left-1/2 -translate-x-1/2 
+        w-[92%] sm:w-auto
+        bg-white shadow-xl border rounded-2xl 
+        px-4 py-3 
+        flex flex-col sm:flex-row 
+        items-center justify-between 
+        gap-3 sm:gap-4 
+        z-50
+    ">
+
+                    {/* COUNT */}
+                    <span className="text-sm font-semibold text-gray-700">
+                        {selectedDocs.length} selected
+                    </span>
+
+                    {/* ACTIONS */}
+                    <div className="flex flex-wrap items-center justify-center gap-3">
+
+                        {!showTrash ? (
+                            <button
+                                onClick={handleBulkMoveToTrash}
+                                className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-xs sm:text-sm font-medium hover:bg-red-100 transition"
+                            >
+                                Move to Trash
+                            </button>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={handleBulkRestore}
+                                    className="px-3 py-1.5 rounded-lg bg-green-50 text-green-600 text-xs sm:text-sm font-medium hover:bg-green-100 transition"
+                                >
+                                    Restore
+                                </button>
+
+                                <button
+                                    onClick={handleBulkPermanentDelete}
+                                    className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-xs sm:text-sm font-medium hover:bg-red-100 transition"
+                                >
+                                    Delete Forever
+                                </button>
+                            </>
+                        )}
+
+                        <button
+                            onClick={() => setSelectedDocs([])}
+                            className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-xs sm:text-sm font-medium hover:bg-gray-200 transition"
+                        >
+                            Cancel
+                        </button>
 
                     </div>
                 </div>

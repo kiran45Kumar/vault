@@ -11,6 +11,8 @@ from .serializers import DocumentSerializer
 from datetime import datetime, timedelta
 import jwt
 
+from django.utils import timezone
+
 
 class UploadThrottle(UserRateThrottle):
     rate = "20/hour"
@@ -128,6 +130,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         doc = self.get_object()
         doc.isDeleted = True
+        doc.deleted_at = timezone.now() 
         doc.save()
         return Response({"message": "Moved to trash"}, status=200)
     
@@ -144,6 +147,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
             return Response({"error": "Not found"}, status=404)
 
         doc.isDeleted = False
+        doc.deleted_at = None
         doc.save()
 
         return Response({"message": "Document restored"})
@@ -169,3 +173,40 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
         doc.delete()
         return Response({"message": "Deleted permanently"})
+
+    @action(detail=False, methods=["post"])
+    def delete_all(self, request):
+        ids = request.data.get("ids", [])
+
+        Document.objects.filter(
+            user=request.user,
+            id__in=ids,
+            isDeleted=False
+        ).update(isDeleted=True,
+                 deleted_at=timezone.now())
+
+        return Response({"message": "Selected documents moved to trash"})
+    @action(detail=False, methods=["post"])
+    def restore_all(self, request):
+        ids = request.data.get("ids", [])
+
+        Document.objects.filter(
+            user=request.user,
+            id__in=ids,
+            isDeleted=True
+        ).update(isDeleted=False,
+                 deleted_at=None)
+
+        return Response({"message": "Selected documents restored"})
+
+    @action(detail=False, methods=["post"])   # 🔥 CHANGE FROM DELETE → POST
+    def permanent_delete_all(self, request):
+        ids = request.data.get("ids", [])
+
+        Document.objects.filter(
+            user=request.user,
+            id__in=ids,
+            isDeleted=True
+        ).delete()
+
+        return Response({"message": "Selected documents deleted permanently"})
