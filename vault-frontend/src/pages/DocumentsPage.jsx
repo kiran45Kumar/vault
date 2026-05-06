@@ -13,7 +13,10 @@ import {
     FiPlus,
     FiMinus,
     FiRotateCcw,
-    FiEdit
+    FiEdit,
+    FiMoreVertical,
+    FiGrid,
+    FiList,
 } from "react-icons/fi";
 
 import { SlLock } from "react-icons/sl";
@@ -138,6 +141,7 @@ function DocumentsPage() {
     const [showPermanentModal, setShowPermanentModal] = useState(false);
     const [permanentDocId, setPermanentDocId] = useState(null);
     const [permanentLoading, setPermanentLoading] = useState(false);
+    const [view, setView] = useState("grid");
 
     // const [categoryFilter, setCategoryFilter] = useState("");
     // const [dateFilter, setDateFilter] = useState(""); // today / week / month
@@ -195,7 +199,7 @@ function DocumentsPage() {
             });
 
             setDocs(res.data.results || res.data || []);
-        } catch (err)  {
+        } catch (err) {
             toast.error("Failed to load documents", err);
             setReloadLoading(false);
         }
@@ -215,6 +219,17 @@ function DocumentsPage() {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleteDocId, setDeleteDocId] = useState(null);
     const [deleteLoading, setDeleteLoading] = useState(false);
+    const [openMenuId, setOpenMenuId] = useState(null);
+    const toggleMenu = (id) => {
+        setOpenMenuId(prev => (prev === id ? null : id));
+    };
+
+    useEffect(() => {
+        const handleClick = () => setOpenMenuId(null);
+        window.addEventListener("click", handleClick);
+
+        return () => window.removeEventListener("click", handleClick);
+    }, []);
 
     const openDeleteModal = (id) => {
         setDeleteDocId(id);
@@ -563,6 +578,9 @@ function DocumentsPage() {
     // const uniqueCategories = [
     //     ...new Set(docs.map((doc) => doc.category_display).filter(Boolean))
     // ].sort();
+    const isImage = (url) => {
+        return /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+    };
     if (!token) return <Navigate to="/login" replace />;
 
     return (
@@ -593,6 +611,36 @@ function DocumentsPage() {
                 >
                     Trash
                 </button>
+            </div>
+
+            <div className="flex justify-end">
+                <div className="bg-gray-100 rounded-xl p-1 flex">
+                    {/* GRID */}
+                    <button
+                        onClick={() => setView("grid")}
+                        className={`
+      p-2 rounded-lg transition-all
+      ${view === "grid"
+                                ? "bg-white shadow text-indigo-600"
+                                : "text-slate-500 hover:text-slate-700"}
+    `}
+                    >
+                        <FiGrid size={18} />
+                    </button>
+
+                    {/* LIST */}
+                    <button
+                        onClick={() => setView("list")}
+                        className={`
+      p-2 rounded-lg transition-all
+      ${view === "list"
+                                ? "bg-white shadow text-indigo-600"
+                                : "text-slate-500 hover:text-slate-700"}
+    `}
+                    >
+                        <FiList size={18} />
+                    </button>
+                </div>
             </div>
             {/* 🔥 FULL WIDTH FILTER BAR */}
             <div className="w-full bg-white/80 backdrop-blur-md p-5 md:p-6 rounded-3xl shadow-sm border border-slate-200/60 space-y-5 mb-6">
@@ -710,335 +758,464 @@ function DocumentsPage() {
             </div>
 
             {/* MOBILE VIEW */}
-            <div className="md:hidden space-y-4">
-                {paginatedDocs.map((doc, index) => (
-                    <div key={doc.id} onClick={() => {
-                        setSelectedDoc(doc);
-                        setShowDetailsModal(true);
-                    }} className="bg-white p-4 rounded-xl shadow border">
-
-                        {/* TOP */}
-                        <div className="flex justify-between items-start">
-
-                            <div
-                                key={doc.id}
-                                className={`bg-white p-4 rounded-xl shadow border ${isSelected(doc.id) ? "border-indigo-500 bg-indigo-50" : ""
-                                    }`}
-                            >
-
-                                {/* SELECT */}
-                                <div
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                    }}
-                                    className="flex justify-between items-start">
-                                    <input
-                                        type="checkbox"
-                                        checked={isSelected(doc.id)}
-                                        onChange={() => toggleSelect(doc.id)}
-                                    />
-
-                                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                        {getType(doc.file_url)}
-                                    </span>
-                                </div>
-
-                                {/* CONTENT */}
-                                <p className="mt-2 font-medium">{doc.title}</p>
-                                <p className="text-xs text-gray-500">{doc.category_display}</p>
-                            </div>
-                            <div>
-                                <p className="font-medium text-gray-800">{doc.title}</p>
-                                <p className="text-xs text-gray-500">
-                                    {doc.category_display}
-                                </p>
-
-                                {/* 🔒 LOCK STATUS */}
-                                <p className="text-xs mt-1">
-                                    {doc.is_locked ? "🔒 Locked" : "🔓 Unlocked"}
-                                </p>
-                            </div>
-
-                            <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                {getType(doc.file_url)}
-                            </span>
-                        </div>
-
-                        {/* DATE */}
-                        <p className="text-xs text-gray-400 mt-2">
-                            {new Date(doc.created_at).toLocaleDateString("en-IN")}
-                        </p>
-
-                        {/* ACTIONS */}
-                        <div className="flex justify-between mt-4 text-sm">
-
-                            {!showTrash ? (
-                                <>
-                                    <button className="flex items-center justify-center flex-col" onClick={(e) => {
-                                        e.stopPropagation();
-                                        openPreview(doc, index);
-                                    }}>
-                                        <FiEye /> View
-                                    </button>
-
-                                    <button className="flex items-center justify-center flex-col" onClick={(e) => {
-                                        e.stopPropagation();
-                                        openPreview(doc, index);
-                                    }}>
-                                        <FiDownload /> Download
-                                    </button>
-
-                                    {!doc.is_locked && (
-                                        <button className="flex items-center justify-center flex-col" onClick={(e) => {
-                                            e.stopPropagation();
-                                            openLockModal(doc.id);
-                                        }}>
-                                            <SlLock /> Lock
-                                        </button>
-                                    )}
-
-                                    <button className="flex items-center justify-center flex-col" onClick={(e) => {
-                                        e.stopPropagation();
-                                        openEditModal(doc);
-                                    }}>
-                                        <FiEdit /> Edit
-                                    </button>
-
-
-                                    <button className="flex items-center justify-center flex-col" onClick={(e) => {
-                                        e.stopPropagation();
-                                        openDeleteModal(doc.id);
-                                    }}>
-                                        <FiTrash2 /> Delete
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleRestore(doc.id);
-                                        }}
-                                        className="text-green-600"
-                                    >
-                                        ♻️ Restore
-                                    </button>
-
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setPermanentDocId(doc.id);
-                                            setShowPermanentModal(true);
-                                        }}
-                                        className="text-red-600"
-                                    >
-                                        🗑 Delete Forever
-                                    </button>
-                                </>
-                            )}
-
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* DESKTOP TABLE */}
-            <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow">
-                <table className="w-full text-sm min-w-175">
-
-                    <thead className="bg-gray-50 text-xs uppercase text-gray-600">
-                        <tr>
-                            <th className="px-6 py-4">
-                                <input
-                                    type="checkbox"
-                                    checked={
-                                        paginatedDocs.length > 0 &&
-                                        selectedDocs.length === paginatedDocs.length
-                                    }
-                                    onClick={(e) => e.stopPropagation()}   // ✅ ADD THIS
-                                    onChange={(e) => {
-                                        if (e.target.checked) {
-                                            setSelectedDocs(paginatedDocs.map(d => d.id));
-                                        } else {
-                                            setSelectedDocs([]);
-                                        }
-                                    }}
-                                />
-                            </th>
-                            <th onClick={() => handleSort("title")} className="px-6 py-4 text-left cursor-pointer">Name</th>
-                            <th className="px-6 py-4 text-left">Type</th>
-                            <th className="px-6 py-4 text-left">Category</th>
-                            <th className="px-6 py-4 text-left">Status</th>
-                            <th onClick={() => handleSort("created_at")} className="px-6 py-4 text-left cursor-pointer">Date</th>
-                            <th onClick={() => handleSort("updated_at")} className="px-6 py-4 text-left cursor-pointer">Last Updated</th>
-                            <th className="px-6 py-4 text-right">Actions</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {paginatedDocs.map((doc, index) => (
-                            <tr key={doc.id} onClick={() => {
+            {view === "grid" && (
+                <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+                    {paginatedDocs.map((doc, index) => (
+                        <div
+                            key={doc.id}
+                            onClick={() => {
                                 setSelectedDoc(doc);
                                 setShowDetailsModal(true);
                             }}
-                                onKeyDown={(e) => {
-                                    e.stopPropagation();
-                                }}
-                                className="hover:bg-gray-50 cursor-pointer transition">
+                            className={`
+                    group relative bg-white rounded-2xl border transition-all duration-300
+                    cursor-pointer hover:shadow-xl flex flex-col overflow-hidden
+                    ${isSelected(doc.id)
+                                    ? "border-indigo-500 ring-4 ring-indigo-50"
+                                    : "border-slate-200 shadow-sm hover:border-slate-300"}
+                `}
+                        >
+                            {/* 🖼️ PREVIEW AREA (Responsive Aspect Ratio) */}
+                            <div className="aspect-4/3 h-80 w-full relative overflow-hidden bg-slate-50 border-b border-slate-100">
+                                {isImage(doc.file_url) ? (
+                                    <img
+                                        src={doc.file_url}
+                                        alt={doc.title}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+                                        <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center border border-slate-100">
+                                            <span className="text-4xl">📄</span>
+                                        </div>
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                            {getType(doc.file_url)}
+                                        </span>
+                                    </div>
+                                )}
 
-                                <td className="px-6 py-4">
+                                {/* 🔒 LOCK OVERLAY */}
+                                {doc.is_locked && (
+                                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center text-white">
+                                        <div className="bg-white p-3 rounded-full shadow-2xl scale-110">
+                                            <SlLock className="text-slate-900 text-lg" />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* 🔝 ACTIONS (Visible on Mobile, Hover on Desktop) */}
+                                <div className="absolute top-2 left-2 right-2 flex justify-between items-start lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                                     <input
                                         type="checkbox"
                                         checked={isSelected(doc.id)}
                                         onClick={(e) => e.stopPropagation()}
                                         onChange={() => toggleSelect(doc.id)}
+                                        className="w-6 h-6 rounded-lg border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer shadow-sm"
                                     />
-                                </td>
-                                <td className="px-6 py-4 font-medium text-gray-800">
-                                    {doc.title}
-                                </td>
 
-                                <td className="px-6 py-4 text-gray-500">
-                                    {getType(doc.file_url)}
-                                </td>
+                                    <div className="relative">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleMenu(doc.id);
+                                            }}
+                                            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all shadow-md border
+                                    ${openMenuId === doc.id
+                                                    ? 'bg-indigo-600 border-indigo-600 text-white'
+                                                    : 'bg-white/90 backdrop-blur-md border-white/20 text-slate-700'}`}
+                                        >
+                                            <FiMoreVertical size={20} />
+                                        </button>
 
-                                <td className="px-6 py-4 text-gray-500">
-                                    {doc.category_display}
-                                </td>
-
-                                {/* 🔒 STATUS */}
-                                <td className="px-6 py-4">
-                                    {doc.is_locked ? (
-                                        <span className="text-red-500 text-xs">🔒 Locked</span>
-                                    ) : (
-                                        <span className="text-green-500 text-xs">🔓 Open</span>
-                                    )}
-                                </td>
-
-                                <td className="px-6 py-4 text-gray-500">
-                                    {new Date(doc.created_at).toLocaleString("en-IN", {
-                                        day: "2-digit",
-                                        month: "short",
-                                        year: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                        hour12: true
-                                    })}
-                                </td>
-                                <td className="px-6 py-4 text-gray-500">
-                                    {new Date(doc.updated_at).toLocaleString("en-IN", {
-                                        day: "2-digit",
-                                        month: "short",
-                                        year: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                        hour12: true
-                                    })}
-                                </td>
-
-                                {/* ACTIONS */}
-                                <td className="px-6 py-4">
-                                    <div className="flex justify-end items-center gap-3">
-
-                                        {!showTrash ? (
+                                        {openMenuId === doc.id && (
                                             <>
-                                                <Tooltip text="View">
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            openPreview(doc, index)
-                                                        }}
-                                                        className="p-2 rounded-lg hover:bg-gray-100"
-                                                    >
-                                                        <FiEye />
-                                                    </button>
-                                                </Tooltip>
+                                                <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); toggleMenu(null); }} />
+                                                <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 py-2 overflow-hidden">
+                                                    <MenuAction icon={<FiEye />} label="View" onClick={() => openPreview(doc, index)} />
+                                                    <MenuAction icon={<FiDownload />} label="Download" onClick={() => openPreview(doc, index)} border />
+                                                    <MenuAction icon={<FiEdit />} label="Edit" onClick={() => openEditModal(doc)} color="text-blue-600" />
+                                                    {!doc.is_locked && (
+                                                        <MenuAction icon={<SlLock />} label="Lock" onClick={() => openLockModal(doc.id)} color="text-yellow-600" />
+                                                    )}
+                                                    <MenuAction icon={<FiTrash2 />} label="Delete" onClick={() => openDeleteModal(doc.id)} color="text-red-600" />
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
 
-                                                <Tooltip text="Download">
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            openPreview(doc, index);
-                                                        }}
-                                                        className="p-2 rounded-lg hover:bg-gray-100"
-                                                    >
-                                                        <FiDownload />
-                                                    </button>
-                                                </Tooltip>
+                            {/* 🔽 METADATA */}
+                            <div className="p-4 bg-white">
+                                <div className="flex items-start justify-between gap-3 mb-1">
+                                    <h3 className="text-sm font-bold text-slate-800 line-clamp-1 leading-tight">
+                                        {doc.title || "Untitled Document"}
+                                    </h3>
+                                    <div className={`mt-1.5 shrink-0 w-2 h-2 rounded-full ${doc.is_locked ? "bg-amber-400" : "bg-emerald-400"}`} />
+                                </div>
 
-                                                {!doc.is_locked && (
-                                                    <Tooltip text="Lock document">
+                                <div className="flex items-center gap-2 text-[12px] text-slate-500">
+                                    <span>{new Date(doc.updated_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</span>
+                                    <span className="opacity-30">•</span>
+                                    <span className={`font-semibold ${doc.is_locked ? "text-amber-600" : "text-emerald-600"}`}>
+                                        {doc.is_locked ? "Locked" : "Active"}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+
+            {view === "list" && (
+                <div className="md:hidden space-y-3 p-3">
+                    {paginatedDocs.map((doc, index) => (
+                        <div
+                            key={doc.id}
+                            onClick={() => {
+                                setSelectedDoc(doc);
+                                setShowDetailsModal(true);
+                            }}
+                            className={`
+          bg-white rounded-xl border shadow-sm p-4 transition
+          ${isSelected(doc.id) ? "border-indigo-500 bg-indigo-50" : "border-slate-200"}
+        `}
+                        >
+                            {/* 🔝 TOP SECTION */}
+                            <div className="flex items-start gap-3">
+
+                                {/* ✅ CHECKBOX */}
+                                <input
+                                    type="checkbox"
+                                    checked={isSelected(doc.id)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    onChange={() => toggleSelect(doc.id)}
+                                    className="mt-1 w-5 h-5 accent-indigo-600 cursor-pointer"
+                                />
+
+                                {/* 📄 CONTENT */}
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-slate-800 truncate">
+                                        {doc.title || "Untitled Document"}
+                                    </p>
+
+                                    <p className="text-xs text-slate-500">
+                                        {doc.category_display}
+                                    </p>
+
+                                    {/* 🔒 STATUS */}
+                                    <p className={`text-xs mt-1 font-medium ${doc.is_locked ? "text-amber-600" : "text-emerald-600"}`}>
+                                        {doc.is_locked ? "🔒 Locked" : "🔓 Active"}
+                                    </p>
+                                </div>
+
+                                {/* 📌 FILE TYPE */}
+                                <span className="text-[10px] font-semibold bg-slate-100 text-slate-600 px-2 py-1 rounded-md">
+                                    {getType(doc.file_url)}
+                                </span>
+                            </div>
+
+                            {/* 📅 DATE */}
+                            <p className="text-[11px] text-slate-400 mt-2 ml-8">
+                                {new Date(doc.created_at).toLocaleDateString("en-IN", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric"
+                                })}
+                            </p>
+
+                            {/* ⚡ ACTIONS */}
+                            <div className="grid grid-cols-5 gap-2 mt-4 text-xs text-slate-600">
+
+                                {!showTrash ? (
+                                    <>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                openPreview(doc, index);
+                                            }}
+                                            className="flex flex-col items-center gap-1 hover:text-indigo-600"
+                                        >
+                                            <FiEye size={16} />
+                                            View
+                                        </button>
+
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                openPreview(doc, index);
+                                            }}
+                                            className="flex flex-col items-center gap-1 hover:text-indigo-600"
+                                        >
+                                            <FiDownload size={16} />
+                                            Download
+                                        </button>
+
+                                        {!doc.is_locked && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openLockModal(doc.id);
+                                                }}
+                                                className="flex flex-col items-center gap-1 hover:text-yellow-600"
+                                            >
+                                                <SlLock size={16} />
+                                                Lock
+                                            </button>
+                                        )}
+
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                openEditModal(doc);
+                                            }}
+                                            className="flex flex-col items-center gap-1 hover:text-blue-600"
+                                        >
+                                            <FiEdit size={16} />
+                                            Edit
+                                        </button>
+
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                openDeleteModal(doc.id);
+                                            }}
+                                            className="flex flex-col items-center gap-1 hover:text-red-600"
+                                        >
+                                            <FiTrash2 size={16} />
+                                            Delete
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleRestore(doc.id);
+                                            }}
+                                            className="col-span-2 text-green-600 flex flex-col items-center"
+                                        >
+                                            ♻️ Restore
+                                        </button>
+
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setPermanentDocId(doc.id);
+                                                setShowPermanentModal(true);
+                                            }}
+                                            className="col-span-3 text-red-600 flex flex-col items-center"
+                                        >
+                                            🗑 Delete Forever
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* DESKTOP TABLE */}
+            {view === "list" && (
+                <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow">
+                    <table className="w-full text-sm min-w-175">
+
+                        <thead className="bg-gray-50 text-xs uppercase text-gray-600">
+                            <tr>
+                                <th className="px-6 py-4">
+                                    <input
+                                        type="checkbox"
+                                        checked={
+                                            paginatedDocs.length > 0 &&
+                                            selectedDocs.length === paginatedDocs.length
+                                        }
+                                        onClick={(e) => e.stopPropagation()}   // ✅ ADD THIS
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setSelectedDocs(paginatedDocs.map(d => d.id));
+                                            } else {
+                                                setSelectedDocs([]);
+                                            }
+                                        }}
+                                    />
+                                </th>
+                                <th onClick={() => handleSort("title")} className="px-6 py-4 text-left cursor-pointer">Name</th>
+                                <th className="px-6 py-4 text-left">Type</th>
+                                <th className="px-6 py-4 text-left">Category</th>
+                                <th className="px-6 py-4 text-left">Status</th>
+                                <th onClick={() => handleSort("created_at")} className="px-6 py-4 text-left cursor-pointer">Date</th>
+                                <th onClick={() => handleSort("updated_at")} className="px-6 py-4 text-left cursor-pointer">Last Updated</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {paginatedDocs.map((doc, index) => (
+                                <tr key={doc.id} onClick={() => {
+                                    setSelectedDoc(doc);
+                                    setShowDetailsModal(true);
+                                }}
+                                    onKeyDown={(e) => {
+                                        e.stopPropagation();
+                                    }}
+                                    className="hover:bg-gray-50 cursor-pointer transition">
+
+                                    <td className="px-6 py-4">
+                                        <input
+                                            type="checkbox"
+                                            checked={isSelected(doc.id)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            onChange={() => toggleSelect(doc.id)}
+                                        />
+                                    </td>
+                                    <td className="px-6 py-4 font-medium text-gray-800">
+                                        {doc.title}
+                                    </td>
+
+                                    <td className="px-6 py-4 text-gray-500">
+                                        {getType(doc.file_url)}
+                                    </td>
+
+                                    <td className="px-6 py-4 text-gray-500">
+                                        {doc.category_display}
+                                    </td>
+
+                                    {/* 🔒 STATUS */}
+                                    <td className="px-6 py-4">
+                                        {doc.is_locked ? (
+                                            <span className="text-red-500 text-xs">🔒 Locked</span>
+                                        ) : (
+                                            <span className="text-green-500 text-xs">🔓 Open</span>
+                                        )}
+                                    </td>
+
+                                    <td className="px-6 py-4 text-gray-500">
+                                        {new Date(doc.created_at).toLocaleString("en-IN", {
+                                            day: "2-digit",
+                                            month: "short",
+                                            year: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                            hour12: true
+                                        })}
+                                    </td>
+                                    <td className="px-6 py-4 text-gray-500">
+                                        {new Date(doc.updated_at).toLocaleString("en-IN", {
+                                            day: "2-digit",
+                                            month: "short",
+                                            year: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                            hour12: true
+                                        })}
+                                    </td>
+
+                                    {/* ACTIONS */}
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-end items-center gap-3">
+
+                                            {!showTrash ? (
+                                                <>
+                                                    <Tooltip text="View">
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                openLockModal(doc.id);
+                                                                openPreview(doc, index)
                                                             }}
-                                                            className="p-2 rounded-lg hover:bg-yellow-100"
+                                                            className="p-2 rounded-lg hover:bg-gray-100"
                                                         >
-                                                            <SlLock />
+                                                            <FiEye />
                                                         </button>
                                                     </Tooltip>
-                                                )}
-                                                <Tooltip text="Edit">
+
+                                                    <Tooltip text="Download">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                openPreview(doc, index);
+                                                            }}
+                                                            className="p-2 rounded-lg hover:bg-gray-100"
+                                                        >
+                                                            <FiDownload />
+                                                        </button>
+                                                    </Tooltip>
+
+                                                    {!doc.is_locked && (
+                                                        <Tooltip text="Lock document">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    openLockModal(doc.id);
+                                                                }}
+                                                                className="p-2 rounded-lg hover:bg-yellow-100"
+                                                            >
+                                                                <SlLock />
+                                                            </button>
+                                                        </Tooltip>
+                                                    )}
+                                                    <Tooltip text="Edit">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                openEditModal(doc);
+                                                            }}
+                                                            className="p-2 rounded-lg hover:bg-blue-100 text-blue-600"
+                                                        >
+                                                            <FiEdit />
+                                                        </button>
+                                                    </Tooltip>
+
+                                                    <Tooltip text="Move to Trash">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                openDeleteModal(doc.id);
+                                                            }}
+                                                            className="p-2 rounded-lg hover:bg-red-100 text-red-500"
+                                                        >
+                                                            <FiTrash2 />
+                                                        </button>
+                                                    </Tooltip>
+                                                </>
+                                            ) : (
+                                                <><Tooltip text="Restore document">
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            openEditModal(doc);
+                                                            handleRestore(doc.id);
                                                         }}
-                                                        className="p-2 rounded-lg hover:bg-blue-100 text-blue-600"
+                                                        className="p-2 rounded-lg hover:bg-green-100 text-green-600"
                                                     >
-                                                        <FiEdit />
+                                                        ♻️
                                                     </button>
                                                 </Tooltip>
 
-                                                <Tooltip text="Move to Trash">
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            openDeleteModal(doc.id);
-                                                        }}
-                                                        className="p-2 rounded-lg hover:bg-red-100 text-red-500"
-                                                    >
-                                                        <FiTrash2 />
-                                                    </button>
-                                                </Tooltip>
-                                            </>
-                                        ) : (
-                                            <><Tooltip text="Restore document">
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleRestore(doc.id);
-                                                    }}
-                                                    className="p-2 rounded-lg hover:bg-green-100 text-green-600"
-                                                >
-                                                    ♻️
-                                                </button>
-                                            </Tooltip>
+                                                    <Tooltip text="Delete permanently">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setPermanentDocId(doc.id);
+                                                                setShowPermanentModal(true);
+                                                            }}
+                                                            className="p-2 rounded-lg hover:bg-red-100 text-red-600"
+                                                        >
+                                                            🗑
+                                                        </button>
+                                                    </Tooltip>
+                                                </>
+                                            )}
 
-                                                <Tooltip text="Delete permanently">
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setPermanentDocId(doc.id);
-                                                            setShowPermanentModal(true);
-                                                        }}
-                                                        className="p-2 rounded-lg hover:bg-red-100 text-red-600"
-                                                    >
-                                                        🗑
-                                                    </button>
-                                                </Tooltip>
-                                            </>
-                                        )}
+                                        </div>
+                                    </td>
 
-                                    </div>
-                                </td>
-
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
             {/* PAGINATION */}
             <div className="flex flex-col md:flex-row items-center justify-between gap-3">
@@ -1563,4 +1740,13 @@ const Tooltip = ({ text, children }) => (
         </div>
     </div>
 );
+
+const MenuAction = ({ icon, label, onClick, color = "text-slate-700", border }) => (
+    <button
+        onClick={(e) => { e.stopPropagation(); onClick(); }}
+        className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-medium hover:bg-slate-50 transition-colors ${color} ${border ? 'border-b border-slate-100' : ''}`}
+    >
+        <span className="text-lg">{icon}</span> {label}
+    </button>
+)
 export default DocumentsPage;
