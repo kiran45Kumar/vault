@@ -51,9 +51,10 @@ function UploadDocument({ onUpload }) {
         Object.keys(errors).forEach((key) => {
           toast.error(errors[key][0]); // show first error
         });
-      } else {
-        toast.error("Something went wrong");
-      }
+      } 
+      // else {
+      //   toast.error("Something went wrong");
+      // }
     } finally {
       setLoading(false);
     }
