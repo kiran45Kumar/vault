@@ -314,7 +314,11 @@ def forgot_password(request):
     uid = urlsafe_base64_encode(force_bytes(user.id))
 
     # FRONTEND RESET URL
-    reset_url = f"http://localhost:5173/reset-password/{uid}/{token}"
+    if settings.DEBUG:
+
+        reset_url = f"http://localhost:5173/reset-password/{uid}/{token}"
+    else:
+        reset_url = f"https://miniblob.netlify.app/reset-password/{uid}/{token}"
 
     # HTML EMAIL
     html_content = render_to_string(
