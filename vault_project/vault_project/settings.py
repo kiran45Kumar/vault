@@ -195,6 +195,7 @@ SIMPLE_JWT = {
 # email settings
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
+EMAIL_TIMEOUT = 10
 EMAIL_HOST = "smtp.gmail.com"
 
 EMAIL_PORT = 587
