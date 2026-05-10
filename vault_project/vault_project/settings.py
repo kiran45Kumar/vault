@@ -75,7 +75,7 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
     "authorization",
     "content-type",
-    "x-unlock-token",  # ✅ ADD THIS
+    "x-unlock-token",  # ADD THIS
 ]
 # throttling
 REST_FRAMEWORK = {
@@ -244,3 +244,7 @@ SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
 #         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
 #     },
 # }
+
+
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
+EMAIL_FROM = os.getenv("EMAIL_FROM")

@@ -26,6 +26,10 @@ from django.utils.http import (
 )
 from google.oauth2 import id_token
 from google.auth.transport import requests
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+import os
+
 
 # Create your views here.
 class LoginThrottle(AnonRateThrottle):
@@ -185,16 +189,24 @@ def send_otp_email(user, request):
         },
     )
 
-    email = EmailMultiAlternatives(
-        subject="Vault Email Verification",
-        body="Your OTP is {}".format(otp),
-        from_email=settings.EMAIL_HOST_USER,
-        to=[user.email],
+    # SUBJECT + TEXT fallback
+    subject = "Vault Email Verification"
+    plain_text = f"Your OTP is {otp}"
+
+    message = Mail(
+        from_email=settings.EMAIL_FROM,
+        to_emails=user.email,
+        subject=subject,
+        plain_text_content=plain_text,
+        html_content=html_content,
     )
 
-    email.attach_alternative(html_content, "text/html")
+    try:
+        sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
+        sg.send(message)
 
-    email.send()
+    except Exception as e:
+        print("SendGrid Error:", e)
 
 
 @api_view(["POST"])
@@ -358,23 +370,19 @@ def reset_password(request):
 
     return Response({"message": "Password reset successful"})
 
+
 @api_view(["POST"])
 def google_auth(request):
 
     token = request.data.get("token")
 
     if not token:
-        return Response(
-            {"error": "No token provided"},
-            status=400
-        )
+        return Response({"error": "No token provided"}, status=400)
 
     try:
 
         idinfo = id_token.verify_oauth2_token(
-            token,
-            requests.Request(),
-            settings.GOOGLE_CLIENT_ID
+            token, requests.Request(), settings.GOOGLE_CLIENT_ID
         )
 
         email = idinfo["email"]
@@ -382,26 +390,22 @@ def google_auth(request):
         name = idinfo.get("name", "")
 
         user, created = User.objects.get_or_create(
-            email=email,
-            defaults={
-                "username": email.split("@")[0]
-            }
+            email=email, defaults={"username": email.split("@")[0]}
         )
 
         refresh = RefreshToken.for_user(user)
 
-        return Response({
-            "access": str(refresh.access_token),
-            "refresh": str(refresh),
-            "user": {
-                "email": user.email,
-                "username": user.username,
+        return Response(
+            {
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": {
+                    "email": user.email,
+                    "username": user.username,
+                },
             }
-        })
+        )
 
     except ValueError:
 
-        return Response(
-            {"error": "Invalid Google token"},
-            status=400
-        )
+        return Response({"error": "Invalid Google token"}, status=400)
