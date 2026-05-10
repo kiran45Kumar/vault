@@ -14,10 +14,13 @@ import api from "../api/axios";
 import { useEffect, useState } from "react";
 
 function DashboardLayout() {
-  const token = localStorage.getItem("token");
-  const location = useLocation();
-  const [initial, setInitial] = useState("A");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const token =
+    localStorage.getItem("token") ||
+    sessionStorage.getItem("token"); const location = useLocation();
+  const [userData, setUserData] = useState({
+    username: "",
+    profile_image: "",
+  }); const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -27,10 +30,10 @@ function DashboardLayout() {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
-        const username = res.data.username;
-        if (username) {
-          setInitial(username.charAt(0).toUpperCase());
-        }
+        setUserData({
+          username: res.data.username,
+          profile_image: res.data.profile_image,
+        });
       } catch (err) {
         console.log("Failed to fetch profile", err);
       }
@@ -167,8 +170,26 @@ function DashboardLayout() {
           <div className="flex items-center gap-4 md:gap-5">
             <FiBell className="text-gray-500 text-lg cursor-pointer" />
 
-            <div className="w-9 h-9 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-              {initial}
+            <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 shadow-sm">
+
+              {userData.profile_image ? (
+
+                <img
+                  src={userData.profile_image}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+
+              ) : (
+
+                <div className="w-full h-full bg-indigo-600 text-white flex items-center justify-center text-sm font-semibold">
+
+                  {userData.username?.charAt(0).toUpperCase() || "U"}
+
+                </div>
+
+              )}
+
             </div>
           </div>
         </header>

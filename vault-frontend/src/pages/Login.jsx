@@ -3,14 +3,23 @@ import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import left_img from "../assets/left_img.png";
-
-function Login({ setToken }) {
+import GoogleAuthButton from "../components/GoogleAuthButton"; function Login({ setToken }) {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
+
+  const [forgotEmail, setForgotEmail] = useState("");
+
+
+
+  const [forgotLoading, setForgotLoading] = useState(false);
+
+
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -21,9 +30,21 @@ function Login({ setToken }) {
     setLoading(true);
 
     try {
-      const response = await api.post("/login/", { email, password });
+      const response = await api.post("/login/", { email, password, remember_me: rememberMe });
 
-      localStorage.setItem("token", response.data.access);
+      const storage = rememberMe
+        ? localStorage
+        : sessionStorage;
+
+      storage.setItem(
+        "token",
+        response.data.access
+      );
+
+      storage.setItem(
+        "refresh",
+        response.data.refresh
+      );
       setToken(response.data.access);
       toast.success("Login successful!");
       navigate("/dashboard");
@@ -36,6 +57,48 @@ function Login({ setToken }) {
       setLoading(false);
     }
   };
+
+  const handleForgotPassword = async () => {
+
+    if (!forgotEmail) {
+
+      toast.error("Enter your email");
+
+      return;
+    }
+
+    setForgotLoading(true);
+
+    try {
+
+      await api.post(
+        "/forgot-password/",
+        {
+          email: forgotEmail,
+        }
+      );
+
+      toast.success(
+        "Password reset link sent to your email"
+      );
+
+      setShowForgotModal(false);
+
+      setForgotEmail("");
+
+    } catch (err) {
+
+      toast.error(
+        err.response?.data?.error ||
+        "Failed to send reset link"
+      );
+
+    } finally {
+
+      setForgotLoading(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row font-sans">
@@ -81,7 +144,7 @@ function Login({ setToken }) {
               placeholder="Enter your email"
               className="border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e)=>{e.key === 'Enter' && handleLogin()}}
+              onKeyDown={(e) => { e.key === 'Enter' && handleLogin() }}
             />
 
             {/* PASSWORD WITH TOGGLE */}
@@ -91,7 +154,7 @@ function Login({ setToken }) {
                 placeholder="Enter your password"
                 className="border border-gray-200 rounded-lg p-3 pr-10 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 onChange={(e) => setPassword(e.target.value)}
-                 onKeyDown={(e)=>{e.key === 'Enter' && handleLogin()}}
+                onKeyDown={(e) => { e.key === 'Enter' && handleLogin() }}
               />
 
               <span
@@ -105,11 +168,18 @@ function Login({ setToken }) {
             {/* OPTIONS */}
             <div className="flex justify-between items-center text-sm text-gray-500">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="accent-indigo-600" />
-                Remember me
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="accent-indigo-600"
+                />                Remember me
               </label>
 
-              <span className="text-indigo-600 hover:underline cursor-pointer">
+              <span
+                onClick={() => setShowForgotModal(true)}
+                className="text-indigo-600 hover:underline cursor-pointer"
+              >
                 Forgot password?
               </span>
             </div>
@@ -130,15 +200,8 @@ function Login({ setToken }) {
               <div className="flex-1 h-px bg-gray-200"></div>
             </div>
 
-            {/* GOOGLE BUTTON */}
-            <button className="border border-gray-200 rounded-lg p-3 flex items-center justify-center gap-2 hover:bg-gray-50 transition text-sm">
-              <img
-                src="https://www.svgrepo.com/show/475656/google-color.svg"
-                className="w-5 h-5"
-                alt="google"
-              />
-              Login with Google
-            </button>
+            {/* GOOGLE LOGIN */}
+            <GoogleAuthButton setToken={setToken} />
 
             {/* REGISTER */}
             <p className="text-center text-sm text-gray-500 mt-2">
@@ -154,6 +217,64 @@ function Login({ setToken }) {
           </div>
         </div>
       </div>
+
+      {
+        showForgotModal && (
+
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+
+            <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl">
+
+              <div className="flex items-center justify-between mb-5">
+
+                <h2 className="text-xl font-semibold">
+                  Forgot Password
+                </h2>
+
+                <button
+                  onClick={() => setShowForgotModal(false)}
+                  className="text-gray-500 hover:text-black"
+                >
+                  ✕
+                </button>
+
+              </div>
+
+              <div className="space-y-4">
+
+                <p className="text-sm text-gray-500">
+                  Enter your email and we'll send you a password reset link.
+                </p>
+
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={forgotEmail}
+                  onChange={(e) =>
+                    setForgotEmail(e.target.value)
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                />
+
+                <button
+                  onClick={handleForgotPassword}
+                  disabled={forgotLoading}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg"
+                >
+                  {
+                    forgotLoading
+                      ? "Sending..."
+                      : "Send Reset Link"
+                  }
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+        )
+      }
     </div>
   );
 }

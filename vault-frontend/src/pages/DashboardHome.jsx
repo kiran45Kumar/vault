@@ -7,24 +7,25 @@ import DocumentList from "../components/DocumentList";
 function DashboardHome() {
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const token = localStorage.getItem("token");
-  const fetchDocs = async () => {
-    try {
-      setLoading(true);
+  const token =
+    localStorage.getItem("token") ||
+    sessionStorage.getItem("token"); const fetchDocs = async () => {
+      try {
+        setLoading(true);
 
-      const res = await api.get("/documents/", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        const res = await api.get("/documents/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      setDocs(res.data.results || res.data || []);
-    } catch (err) {
-      console.error("FETCH DOCS ERROR:", err.response?.data || err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+        setDocs(res.data.results || res.data || []);
+      } catch (err) {
+        console.error("FETCH DOCS ERROR:", err.response?.data || err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
   useEffect(() => {
     fetchDocs();

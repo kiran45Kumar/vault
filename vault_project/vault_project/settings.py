@@ -31,8 +31,9 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG") == "True"
 
 ALLOWED_HOSTS = [
-                "*",
-                  "vault-rlho.onrender.com",]  # Later restrict to your Koyeb domain
+    "*",
+    "vault-rlho.onrender.com",
+]  # Later restrict to your Koyeb domain
 
 
 # Application definition
@@ -66,7 +67,7 @@ MIDDLEWARE = [
 
 # cors settings
 
-CORS_ALLOW_ALL_ORIGINS = True   # for now
+CORS_ALLOW_ALL_ORIGINS = True  # for now
 CORS_ALLOWED_ORIGINS = [
     "https://miniblob.netlify.app",
     "http://localhost:5173",
@@ -125,7 +126,7 @@ DATABASES = {
 }
 # local db
 # DATABASES = {
-#     "default": {    
+#     "default": {
 #         "ENGINE": "django.db.backends.mysql",
 #         "NAME": os.getenv("DATABASE_NAME_LOCAL"),
 #         "USER": os.getenv("DATABASE_USER_LOCAL"),
@@ -186,7 +187,23 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
 }
+
+# email settings
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+EMAIL_HOST = "smtp.gmail.com"
+
+EMAIL_PORT = 587
+
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 
 
 # Internationalizationx
@@ -207,8 +224,11 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
+# google cred
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 # cloudinary settings
-
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
 # cloudinary.config(
 #     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
 #     api_key=os.getenv("CLOUDINARY_API_KEY"),

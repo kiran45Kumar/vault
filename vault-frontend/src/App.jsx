@@ -1,43 +1,115 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+} from "react-router-dom";
+
+import { useState } from "react";
 
 import Login from "./pages/Login";
-import { useState } from "react";
 import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import { Navigate } from "react-router-dom";
-
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import DashboardLayout from "./pages/DashboardLayout";
 import DashboardHome from "./pages/DashboardHome";
 import UploadPage from "./pages/UploadPage";
 import DocumentsPage from "./pages/DocumentsPage";
 import Profile from "./pages/ProfilePage";
 import VaultLanding from "./pages/VaultLanding";
+import ResetPassword from "./pages/ResetPassword";
+import useAutoLogout from "./hooks/useAutoLogout";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-function App() {
-  const [token, setToken] = useState(localStorage.getItem("token"));
+
+function AppRoutes() {
+
+  const [, setToken] = useState(
+    localStorage.getItem("token") ||
+    sessionStorage.getItem("token")
+  );
+
+  const navigate = useNavigate();
+
+  // AUTO LOGOUT
+  useAutoLogout(() => {
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("refresh");
+
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("refresh");
+
+    setToken(null);
+
+    navigate("/login");
+  });
+
   return (
-    <BrowserRouter>
+    <>
       <Routes>
+
         <Route path="/" element={<VaultLanding />} />
-        <Route path="/login" element={<Login  setToken={setToken} />} />
-        <Route path="/register" element={<Register />} />
+
+        <Route
+          path="/login"
+          element={<Login setToken={setToken} />}
+        />
+
+        <Route
+          path="/register"
+          element={<Register />}
+        />
+
+        <Route
+          path="/reset-password/:uid/:token"
+          element={<ResetPassword />}
+        />
+
         <Route
           path="/dashboard"
-          element={token ? <DashboardLayout /> : <Navigate to="/" />}
+          element={
+            (
+              localStorage.getItem("token") ||
+              sessionStorage.getItem("token")
+            )
+              ? <DashboardLayout />
+              : <Navigate to="/" />
+          }
         >
-          {/* DEFAULT PAGE */}
+
           <Route index element={<DashboardHome />} />
-          {/* FUTURE ROUTES */}
-          <Route path="upload" element={<UploadPage />} />
-          <Route path="documents" element={<DocumentsPage />} />
-          <Route path="profile" element={<Profile />} />
+
+          <Route
+            path="upload"
+            element={<UploadPage />}
+          />
+
+          <Route
+            path="documents"
+            element={<DocumentsPage />}
+          />
+
+          <Route
+            path="profile"
+            element={<Profile />}
+          />
+
         </Route>
+
       </Routes>
+
       <ToastContainer />
-    </BrowserRouter>
+    </>
   );
 }
 
-export default App;
+
+export default function App() {
+
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
+  );
+}

@@ -188,8 +188,9 @@ function DocumentsPage() {
     const [unlockToken, setUnlockToken] = useState({});
     const itemsPerPage = 5;
     const [reloadLoading, setReloadLoading] = useState(false);
-    const token = localStorage.getItem("token");
-
+    const token =
+        localStorage.getItem("token") ||
+        sessionStorage.getItem("token");
     const fetchDocs = async () => {
         setReloadLoading(true);
         try {

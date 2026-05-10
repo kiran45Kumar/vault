@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      background: #f4f7fb;
+      font-family: Arial, sans-serif;
+      padding: 30px;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      border-radius: 14px;
+      padding: 40px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    }
+
+    .logo {
+      text-align: center;
+      font-size: 28px;
+      font-weight: bold;
+      color: #2563eb;
+      margin-bottom: 10px;
+    }
+
+    .title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 20px;
+    }
+
+    .otp-box {
+      background: #eff6ff;
+      color: #2563eb;
+      font-size: 34px;
+      font-weight: bold;
+      text-align: center;
+      padding: 18px;
+      border-radius: 12px;
+      letter-spacing: 8px;
+      margin: 25px 0;
+    }
+
+    .info {
+      font-size: 14px;
+      color: #6b7280;
+      margin-top: 25px;
+      line-height: 1.7;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="logo">
+    🔐 Vault
+  </div>
+
+  <div class="title">
+    Email Verification OTP
+  </div>
+
+  <p>
+    Hi {{ username }},
+  </p>
+
+  <p>
+    Use the OTP below to verify your email change request.
+  </p>
+
+  <div class="otp-box">
+    {{ otp }}
+  </div>
+
+  <p>
+    This OTP is valid for <b>5 minutes</b>.
+  </p>
+
+  <div class="info">
+    <p><b>Device:</b> {{ device }}</p>
+    <p><b>IP Address:</b> {{ ip }}</p>
+  </div>
+
+  <div class="footer">
+    If you didn't request this change, please secure your account immediately.
+  </div>
+
+</div>
+
+</body>
+</html>

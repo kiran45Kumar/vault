@@ -14,7 +14,9 @@ import UploadDocument from "../components/UploadDocument";
 import DocumentList from "../components/DocumentList";
 
 function Dashboard() {
-  const token = localStorage.getItem("token");
+  const token =
+    localStorage.getItem("token") ||
+    sessionStorage.getItem("token");
   const [docs, setDocs] = useState([]);
   const [initial, setInitial] = useState("A");
 

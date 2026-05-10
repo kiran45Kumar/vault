@@ -3,6 +3,8 @@ import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import left_img from "../assets/left_img.png";
+import { GoogleLogin } from "@react-oauth/google";
+import GoogleAuthButton from "../components/GoogleAuthButton";
 
 function Register() {
   const navigate = useNavigate();
@@ -124,10 +126,10 @@ function Register() {
             {password && (
               <p
                 className={`text-xs ${getStrength() === "Strong"
-                    ? "text-green-600"
-                    : getStrength() === "Medium"
-                      ? "text-yellow-600"
-                      : "text-red-500"
+                  ? "text-green-600"
+                  : getStrength() === "Medium"
+                    ? "text-yellow-600"
+                    : "text-red-500"
                   }`}
               >
                 Strength: {getStrength()}
@@ -153,6 +155,15 @@ function Register() {
                 Login
               </span>
             </p>
+            {/* DIVIDER */}
+            <div className="flex items-center gap-3 text-gray-400 text-sm">
+              <div className="flex-1 h-px bg-gray-200"></div>
+              or
+              <div className="flex-1 h-px bg-gray-200"></div>
+            </div>
+
+            {/* GOOGLE REGISTER */}
+            <GoogleAuthButton />
           </div>
         </div>
       </div>
