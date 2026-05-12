@@ -29,6 +29,7 @@ from google.auth.transport import requests
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 import os
+from utils.emails import send_email
 
 
 # Create your views here.
@@ -172,13 +173,10 @@ def send_otp_email(user, request):
     profile.otp_created_at = timezone.now()
     profile.save()
 
-    # DEVICE INFO
     device = request.META.get("HTTP_USER_AGENT", "Unknown Device")
 
-    # IP ADDRESS
     ip = request.META.get("REMOTE_ADDR")
 
-    # HTML TEMPLATE
     html_content = render_to_string(
         "emails/otp_email.html",
         {
@@ -189,24 +187,12 @@ def send_otp_email(user, request):
         },
     )
 
-    # SUBJECT + TEXT fallback
-    subject = "Vault Email Verification"
-    plain_text = f"Your OTP is {otp}"
-
-    message = Mail(
-        from_email=settings.EMAIL_FROM,
-        to_emails=user.email,
-        subject=subject,
-        plain_text_content=plain_text,
+    send_email(
+        to_email=user.email,
+        subject="Vault Email Verification",
+        plain_text=f"Your OTP is {otp}",
         html_content=html_content,
     )
-
-    try:
-        sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
-        sg.send(message)
-
-    except Exception as e:
-        print("SendGrid Error:", e)
 
 
 @api_view(["POST"])
@@ -301,26 +287,27 @@ def forgot_password(request):
     email = request.data.get("email")
 
     try:
-
         user = User.objects.get(email=email)
 
     except User.DoesNotExist:
+        return Response(
+            {"error": "Email not found"},
+            status=404
+        )
 
-        return Response({"error": "Email not found"}, status=404)
-
-    # GENERATE TOKEN
     token = PasswordResetTokenGenerator().make_token(user)
 
     uid = urlsafe_base64_encode(force_bytes(user.id))
 
-    # FRONTEND RESET URL
     if settings.DEBUG:
-
-        reset_url = f"http://localhost:5173/reset-password/{uid}/{token}"
+        reset_url = (
+            f"http://localhost:5173/reset-password/{uid}/{token}"
+        )
     else:
-        reset_url = f"https://miniblob.netlify.app/reset-password/{uid}/{token}"
+        reset_url = (
+            f"https://miniblob.netlify.app/reset-password/{uid}/{token}"
+        )
 
-    # HTML EMAIL
     html_content = render_to_string(
         "emails/reset_password.html",
         {
@@ -329,18 +316,16 @@ def forgot_password(request):
         },
     )
 
-    email_message = EmailMultiAlternatives(
+    send_email(
+        to_email=user.email,
         subject="Reset Your Vault Password",
-        body=f"Reset your password: {reset_url}",
-        from_email=settings.EMAIL_HOST_USER,
-        to=[user.email],
+        plain_text=f"Reset your password: {reset_url}",
+        html_content=html_content,
     )
 
-    email_message.attach_alternative(html_content, "text/html")
-
-    email_message.send()
-
-    return Response({"message": "Password reset link sent"})
+    return Response(
+        {"message": "Password reset link sent"}
+    )
 
 
 @api_view(["POST"])

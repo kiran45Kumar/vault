@@ -144,65 +144,239 @@ function DocumentList({ docs, setDocs, loading, setLoading }) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
 
-          {docs.map((doc) => (
-            <div
-              key={doc.id}
-              className="group bg-white border border-gray-200 rounded-xl p-4 hover:border-indigo-300 hover:shadow-md transition-all duration-200"
-            >
+          {docs.map((doc) => {
+            const isImageFile = doc.file_url?.includes(".jpg")
+              || doc.file_url?.includes(".jpeg")
+              || doc.file_url?.includes(".png")
+              || doc.file_url?.includes(".webp");
 
-              {/* ICON */}
-              <div className="text-3xl mb-3 flex items-center justify-center">
-                {getIcon(doc.file_url)}
-              </div>
-
-              {/* TITLE */}
-              <p className="text-sm font-medium text-gray-800 truncate text-center">
-                {doc.title}
-              </p>
-
-              {/* CATEGORY */}
-              <p className="text-xs text-gray-500 mt-1 text-center">
-                {doc.category_display}
-              </p>
-
-              <p className="text-xs text-center mt-1">
-                {doc.is_locked ? "🔒 Locked" : "🔓 Unlocked"}
-              </p>
-
-              {/* DATE */}
-              <p className="text-xs text-gray-400 mt-1 text-center">
-                {doc.created_at
-                  ? new Date(doc.created_at).toLocaleString("en-IN", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
-                  : "Recently added"}
-              </p>
-
-              {/* ACTIONS */}
-              <div className="flex justify-between items-center mt-4 text-xs 
-              opacity-100 md:opacity-0 md:group-hover:opacity-100 transition"
+            return (
+              <div
+                key={doc.id}
+                className="
+        group
+        bg-white
+        border
+        border-gray-200
+        rounded-2xl
+        overflow-hidden
+        hover:border-indigo-300
+        hover:shadow-lg
+        transition-all duration-300
+      "
               >
-                {doc.file_url && (
-                  <button
-                    onClick={() => handleView(doc)}
-                    className="flex items-center gap-1 text-indigo-600 hover:underline"
-                  >
-                    <FiEye /> View
-                  </button>
+
+                {/* IMAGE PREVIEW */}
+                {isImageFile ? (
+                  <div className="relative h-56 overflow-hidden bg-slate-100">
+
+                    <img
+                      src={doc.file_url}
+                      alt={doc.title}
+                      className={`
+              w-full
+              h-full
+              object-cover
+              transition-all duration-500
+              group-hover:scale-105
+              ${doc.is_locked ? "blur-2xl brightness-50" : ""}
+            `}
+                    />
+
+                    {/* LOCK OVERLAY */}
+                    {doc.is_locked && (
+                      <div className="
+              absolute inset-0
+              flex items-center justify-center
+            ">
+                        <div className="
+                bg-white/90
+                backdrop-blur-md
+                p-4
+                rounded-full
+                shadow-2xl
+              ">
+                          <span className="text-2xl">🔒</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TOP GRADIENT */}
+                    <div className="
+            absolute inset-0
+            bg-linear-to-t
+            from-black/70
+            via-black/10
+            to-transparent
+          " />
+
+                    {/* BOTTOM INFO */}
+                    <div className="
+            absolute bottom-0 left-0 right-0
+            p-4
+            text-white
+          ">
+                      <p className="
+              text-sm
+              font-semibold
+              truncate
+            ">
+                        {doc.title}
+                      </p>
+
+                      <p className="text-xs text-white/80 mt-1">
+                        {doc.category_display}
+                      </p>
+
+                      <div className="
+              flex justify-between items-center
+              mt-4
+            ">
+
+                        <button
+                          onClick={() => handleView(doc)}
+                          className="
+                  flex items-center gap-1
+                  text-xs
+                  bg-white/10
+                  hover:bg-white/20
+                  backdrop-blur-md
+                  px-3 py-2
+                  rounded-xl
+                  transition-all
+                "
+                        >
+                          <FiEye />
+                          View
+                        </button>
+
+                        <button
+                          onClick={() => handleDelete(doc.id)}
+                          className="
+                  flex items-center gap-1
+                  text-xs
+                  bg-red-500/20
+                  hover:bg-red-500/30
+                  text-red-100
+                  px-3 py-2
+                  rounded-xl
+                  transition-all
+                "
+                        >
+                          <FiTrash2 />
+                          Delete
+                        </button>
+
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+
+                  /* NORMAL CARD FOR PDF / FILES */
+                  <div className="p-4">
+
+                    {/* ICON */}
+                    <div className="
+            text-3xl mb-3
+            flex items-center justify-center
+          ">
+                      {getIcon(doc.file_url)}
+                    </div>
+
+                    {/* TITLE */}
+                    <p className="
+            text-sm
+            font-medium
+            text-gray-800
+            truncate
+            text-center
+          ">
+                      {doc.title}
+                    </p>
+
+                    {/* CATEGORY */}
+                    <p className="
+            text-xs
+            text-gray-500
+            mt-1
+            text-center
+          ">
+                      {doc.category_display}
+                    </p>
+
+                    {/* LOCK STATUS */}
+                    <p className="
+            text-xs
+            text-center
+            mt-1
+          ">
+                      {doc.is_locked
+                        ? "🔒 Locked"
+                        : "🔓 Unlocked"}
+                    </p>
+
+                    {/* DATE */}
+                    <p className="
+            text-xs
+            text-gray-400
+            mt-1
+            text-center
+          ">
+                      {doc.created_at
+                        ? new Date(doc.created_at).toLocaleString(
+                          "en-IN",
+                          {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          }
+                        )
+                        : "Recently added"}
+                    </p>
+
+                    {/* ACTIONS */}
+                    <div
+                      className="
+              flex justify-between items-center
+              mt-4 text-xs
+              opacity-100
+              md:opacity-0
+              md:group-hover:opacity-100
+              transition
+            "
+                    >
+
+                      {doc.file_url && (
+                        <button
+                          onClick={() => handleView(doc)}
+                          className="
+                  flex items-center gap-1
+                  text-indigo-600
+                  hover:underline
+                "
+                        >
+                          <FiEye />
+                          View
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => handleDelete(doc.id)}
+                        className="
+                flex items-center gap-1
+                text-red-500
+                hover:underline
+              "
+                      >
+                        <FiTrash2 />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
                 )}
-
-                <button
-                  onClick={() => handleDelete(doc.id)}
-                  className="flex items-center gap-1 text-red-500 hover:underline"
-                >
-                  <FiTrash2 /> Delete
-                </button>
               </div>
-
-            </div>
-          ))}
+            );
+          })}
 
           {showModal && (
             <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">

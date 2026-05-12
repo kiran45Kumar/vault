@@ -27,7 +27,7 @@ function DashboardLayout() {
       try {
         const res = await api.get("/profile/", {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("token") || sessionStorage.getItem("token")}`,
           },
         });
         setUserData({

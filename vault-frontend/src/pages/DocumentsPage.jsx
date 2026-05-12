@@ -580,7 +580,11 @@ function DocumentsPage() {
     //     ...new Set(docs.map((doc) => doc.category_display).filter(Boolean))
     // ].sort();
     const isImage = (url) => {
-        return /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+        if (!url) return false;
+
+        return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(
+            url.split("?")[0]
+        );
     };
     if (!token) return <Navigate to="/login" replace />;
 
@@ -760,7 +764,14 @@ function DocumentsPage() {
 
             {/* MOBILE VIEW */}
             {view === "grid" && (
-                <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+                <div className="
+        grid grid-cols-1
+        sm:grid-cols-2
+        md:grid-cols-3
+        xl:grid-cols-4
+        gap-4
+        p-4
+    ">
                     {paginatedDocs.map((doc, index) => (
                         <div
                             key={doc.id}
@@ -768,99 +779,266 @@ function DocumentsPage() {
                                 setSelectedDoc(doc);
                                 setShowDetailsModal(true);
                             }}
-                            className={`
-                    group relative bg-white rounded-2xl border transition-all duration-300
-                    cursor-pointer hover:shadow-xl flex flex-col overflow-hidden
-                    ${isSelected(doc.id)
-                                    ? "border-indigo-500 ring-4 ring-indigo-50"
-                                    : "border-slate-200 shadow-sm hover:border-slate-300"}
-                `}
+                            className="
+                    relative
+                    group
+                    overflow-hidden
+                    rounded-3xl
+                    bg-white
+                    border border-slate-200/70
+                    shadow-sm
+                    hover:shadow-2xl
+                    transition-all duration-300
+                    cursor-pointer
+                "
                         >
-                            {/* 🖼️ PREVIEW AREA (Responsive Aspect Ratio) */}
-                            <div className="aspect-4/3 h-80 w-full relative overflow-hidden bg-slate-50 border-b border-slate-100">
+
+                            {/* PREVIEW */}
+                            <div className="
+                    relative
+                    h-77 sm:h-72 md:h-80
+                    w-full
+                    overflow-hidden
+                    bg-slate-100
+                ">
+
                                 {isImage(doc.file_url) ? (
                                     <img
                                         src={doc.file_url}
                                         alt={doc.title}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        className={`
+                                w-full h-full
+                                object-cover
+                                transition-all duration-500
+                                group-hover:scale-105
+                                ${doc.is_locked
+                                                ? "blur-2xl brightness-50"
+                                                : ""}
+                            `}
                                     />
                                 ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                                        <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center border border-slate-100">
-                                            <span className="text-4xl">📄</span>
+                                    <div className="
+                            w-full h-full
+                            flex flex-col
+                            items-center justify-center
+                            bg-linear-to-br
+                            from-slate-100
+                            to-slate-200
+                        ">
+                                        <div className="
+                                w-20 h-20
+                                rounded-3xl
+                                bg-white
+                                shadow-lg
+                                flex items-center justify-center
+                            ">
+                                            <span className="text-5xl">
+                                                📄
+                                            </span>
                                         </div>
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+
+                                        <span className="
+                                mt-4
+                                text-xs
+                                font-bold
+                                text-slate-500
+                                uppercase
+                                tracking-[0.25em]
+                            ">
                                             {getType(doc.file_url)}
                                         </span>
                                     </div>
                                 )}
 
-                                {/* 🔒 LOCK OVERLAY */}
+                                {/* DARK OVERLAY */}
+                                <div className="
+                        absolute inset-0
+                        bg-linear-to-t
+                        from-black/70
+                        via-black/10
+                        to-transparent
+                    " />
+
+                                {/* LOCK OVERLAY */}
                                 {doc.is_locked && (
-                                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center text-white">
-                                        <div className="bg-white p-3 rounded-full shadow-2xl scale-110">
-                                            <SlLock className="text-slate-900 text-lg" />
+                                    <div className="
+                            absolute inset-0
+                            flex items-center justify-center
+                        ">
+                                        <div className="
+                                bg-white/90
+                                backdrop-blur-xl
+                                p-4
+                                rounded-full
+                                shadow-2xl
+                            ">
+                                            <SlLock className="
+                                    text-slate-900 text-2xl
+                                " />
                                         </div>
                                     </div>
                                 )}
 
-                                {/* 🔝 ACTIONS (Visible on Mobile, Hover on Desktop) */}
-                                <div className="absolute top-2 left-2 right-2 flex justify-between items-start lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                                {/* TOP ACTIONS */}
+                                <div className="
+                        absolute top-3 left-3 right-3
+                        flex justify-between items-start
+                        z-20
+                    ">
+
+                                    {/* CHECKBOX */}
                                     <input
                                         type="checkbox"
                                         checked={isSelected(doc.id)}
                                         onClick={(e) => e.stopPropagation()}
                                         onChange={() => toggleSelect(doc.id)}
-                                        className="w-6 h-6 rounded-lg border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer shadow-sm"
+                                        className="
+                                w-5 h-5
+                                rounded-md
+                                border-slate-300
+                                text-indigo-600
+                                focus:ring-indigo-500
+                                shadow
+                                bg-white/90
+                            "
                                     />
 
+                                    {/* MENU */}
                                     <div className="relative">
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 toggleMenu(doc.id);
                                             }}
-                                            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all shadow-md border
+                                            className={`
+                                    w-10 h-10
+                                    flex items-center justify-center
+                                    rounded-2xl
+                                    shadow-lg
+                                    backdrop-blur-xl
+                                    transition-all
+                                    border
                                     ${openMenuId === doc.id
-                                                    ? 'bg-indigo-600 border-indigo-600 text-white'
-                                                    : 'bg-white/90 backdrop-blur-md border-white/20 text-slate-700'}`}
+                                                    ? "bg-indigo-600 text-white border-indigo-600"
+                                                    : "bg-white/80 text-slate-700 border-white/20"}
+                                `}
                                         >
-                                            <FiMoreVertical size={20} />
+                                            <FiMoreVertical size={18} />
                                         </button>
 
                                         {openMenuId === doc.id && (
                                             <>
-                                                <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); toggleMenu(null); }} />
-                                                <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 py-2 overflow-hidden">
-                                                    <MenuAction icon={<FiEye />} label="View" onClick={() => openPreview(doc, index)} />
-                                                    <MenuAction icon={<FiDownload />} label="Download" onClick={() => openPreview(doc, index)} border />
-                                                    <MenuAction icon={<FiEdit />} label="Edit" onClick={() => openEditModal(doc)} color="text-blue-600" />
+                                                <div
+                                                    className="fixed inset-0 z-40"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleMenu(null);
+                                                    }}
+                                                />
+
+                                                <div className="
+                                        absolute right-0 mt-2
+                                        w-52
+                                        bg-white
+                                        border border-slate-200
+                                        rounded-2xl
+                                        shadow-2xl
+                                        z-50
+                                        py-2
+                                        overflow-hidden
+                                    ">
+                                                    <MenuAction
+                                                        icon={<FiEye />}
+                                                        label="View"
+                                                        onClick={() =>
+                                                            openPreview(doc, index)
+                                                        }
+                                                    />
+
+                                                    <MenuAction
+                                                        icon={<FiDownload />}
+                                                        label="Download"
+                                                        onClick={() =>
+                                                            openPreview(doc, index)
+                                                        }
+                                                        border
+                                                    />
+
+                                                    <MenuAction
+                                                        icon={<FiEdit />}
+                                                        label="Edit"
+                                                        onClick={() =>
+                                                            openEditModal(doc)
+                                                        }
+                                                        color="text-blue-600"
+                                                    />
+
                                                     {!doc.is_locked && (
-                                                        <MenuAction icon={<SlLock />} label="Lock" onClick={() => openLockModal(doc.id)} color="text-yellow-600" />
+                                                        <MenuAction
+                                                            icon={<SlLock />}
+                                                            label="Lock"
+                                                            onClick={() =>
+                                                                openLockModal(doc.id)
+                                                            }
+                                                            color="text-yellow-600"
+                                                        />
                                                     )}
-                                                    <MenuAction icon={<FiTrash2 />} label="Delete" onClick={() => openDeleteModal(doc.id)} color="text-red-600" />
+
+                                                    <MenuAction
+                                                        icon={<FiTrash2 />}
+                                                        label="Delete"
+                                                        onClick={() =>
+                                                            openDeleteModal(doc.id)
+                                                        }
+                                                        color="text-red-600"
+                                                    />
                                                 </div>
                                             </>
                                         )}
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* 🔽 METADATA */}
-                            <div className="p-4 bg-white">
-                                <div className="flex items-start justify-between gap-3 mb-1">
-                                    <h3 className="text-sm font-bold text-slate-800 line-clamp-1 leading-tight">
-                                        {doc.title || "Untitled Document"}
+                                {/* BOTTOM INFO */}
+                                <div className="
+                        absolute bottom-0 left-0 right-0
+                        p-4
+                        z-20
+                    ">
+                                    <h3 className="
+                            text-white
+                            text-sm md:text-base
+                            font-semibold
+                            line-clamp-1
+                        ">
+                                        {doc.title || "Untitled"}
                                     </h3>
-                                    <div className={`mt-1.5 shrink-0 w-2 h-2 rounded-full ${doc.is_locked ? "bg-amber-400" : "bg-emerald-400"}`} />
-                                </div>
 
-                                <div className="flex items-center gap-2 text-[12px] text-slate-500">
-                                    <span>{new Date(doc.updated_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</span>
-                                    <span className="opacity-30">•</span>
-                                    <span className={`font-semibold ${doc.is_locked ? "text-amber-600" : "text-emerald-600"}`}>
-                                        {doc.is_locked ? "Locked" : "Active"}
-                                    </span>
+                                    <div className="
+                            flex items-center gap-2
+                            text-xs
+                            text-white/80
+                            mt-1
+                        ">
+                                        <span>
+                                            {new Date(
+                                                doc.updated_at
+                                            ).toLocaleDateString(
+                                                "en-IN",
+                                                {
+                                                    day: "2-digit",
+                                                    month: "short",
+                                                }
+                                            )}
+                                        </span>
+
+                                        <span>•</span>
+
+                                        <span>
+                                            {doc.is_locked
+                                                ? "Locked"
+                                                : "Active"}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1236,58 +1414,303 @@ function DocumentsPage() {
 
             {/* 🔥 SWIPE MODAL */}
             {previewIndex !== null && (
-                <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
+                <div className="fixed inset-0 z-50 bg-black overflow-hidden">
 
-                    {/* ❌ CLOSE BUTTON */}
-                    <button
+                    {/* BACKDROP */}
+                    <div
+                        className="absolute inset-0 bg-black/95 backdrop-blur-md"
                         onClick={() => setPreviewIndex(null)}
-                        className="absolute top-4 right-4 text-white text-2xl"
+                    />
+
+                    {/* HEADER */}
+                    <div
+                        className="
+                absolute top-0 left-0 right-0 z-50
+                flex items-center justify-between
+                px-4 md:px-6
+                py-4
+                bg-linear-to-b
+                from-black/90
+                via-black/60
+                to-transparent
+            "
                     >
-                        <FiX />
-                    </button>
 
-                    {/* 📄 PREVIEW */}
-                    <div {...handlers} className="w-full flex justify-center px-4">
-                        {loadingPreview ? (
-                            <div className="text-white text-sm animate-pulse">
-                                Loading document...
-                            </div>
-                        ) : previewUrl?.match(/\.(jpg|png|jpeg)$/i) ? (
+                        {/* LEFT SIDE */}
+                        <div className="flex items-center gap-3 min-w-0">
 
-                            // 👇 ZOOM WRAPPER HERE
                             <div
-                                className="relative overflow-hidden"
+                                className="
+                        w-11 h-11
+                        rounded-2xl
+                        bg-white/10
+                        backdrop-blur-xl
+                        border border-white/10
+                        flex items-center justify-center
+                        shrink-0
+                    "
+                            >
+                                <span className="text-lg text-white">
+                                    {previewUrl?.match(/\.(jpg|png|jpeg|webp)$/i)
+                                        ? "🖼️"
+                                        : "📄"}
+                                </span>
+                            </div>
+
+                            <div className="min-w-0">
+                                <h2
+                                    className="
+                            text-white
+                            text-sm md:text-base
+                            font-semibold
+                            truncate
+                            max-w-32
+                            sm:max-w-52
+                            md:max-w-md
+                        "
+                                >
+                                    {paginatedDocs?.[previewIndex]?.title ||
+                                        "Document"}
+                                </h2>
+
+                                <p
+                                    className="
+                            text-white/50
+                            text-[11px]
+                            md:text-xs
+                            mt-0.5
+                        "
+                                >
+                                    Secure Preview
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* RIGHT ACTIONS */}
+                        <div className="flex items-center gap-2 shrink-0">
+
+                            <button
+                                onClick={() =>
+                                    window.open(previewUrl, "_blank")
+                                }
+                                className="
+                        w-10 h-10 md:w-11 md:h-11
+                        rounded-2xl
+                        bg-white/10
+                        hover:bg-white/20
+                        border border-white/10
+                        backdrop-blur-xl
+                        flex items-center justify-center
+                        transition-all
+                    "
+                            >
+                                <FiDownload
+                                    className="text-white"
+                                    size={18}
+                                />
+                            </button>
+
+                            <button
+                                onClick={() => setPreviewIndex(null)}
+                                className="
+                        w-10 h-10 md:w-11 md:h-11
+                        rounded-2xl
+                        bg-red-500
+                        hover:bg-red-600
+                        flex items-center justify-center
+                        transition-all
+                        shadow-xl
+                    "
+                            >
+                                <FiX
+                                    className="text-white"
+                                    size={18}
+                                />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* MAIN CONTENT */}
+                    <div
+                        {...handlers}
+                        className="
+                relative z-10
+                w-full h-full
+                flex items-center justify-center
+                px-3 md:px-8
+                pt-20 md:pt-24
+                pb-24 md:pb-28
+            "
+                    >
+
+                        {loadingPreview ? (
+
+                            <div className="flex flex-col items-center gap-4">
+
+                                <div
+                                    className="
+                            w-14 h-14
+                            border-4
+                            border-white/20
+                            border-t-white
+                            rounded-full
+                            animate-spin
+                        "
+                                />
+
+                                <p className="text-sm text-white/70">
+                                    Loading preview...
+                                </p>
+                            </div>
+
+                        ) : previewUrl?.match(/\.(jpg|png|jpeg|webp)$/i) ? (
+
+                            <div
+                                className="
+                        relative
+                        w-full
+                        h-full
+                        flex items-center justify-center
+                        overflow-hidden
+                    "
                                 onWheel={handleWheel}
                                 onMouseMove={handleMouseMove}
                                 onMouseUp={handleMouseUp}
                                 onMouseLeave={handleMouseUp}
                             >
+
                                 <img
                                     src={previewUrl}
                                     onMouseDown={handleMouseDown}
-                                    className="max-h-[80vh] cursor-grab select-none"
-                                    style={{
-                                        transform: `scale(${zoom}) translate(${position.x}px, ${position.y}px)`
-                                    }}
                                     draggable={false}
+                                    className="
+                            max-w-full
+                            max-h-full
+                            object-contain
+                            select-none
+                            cursor-grab active:cursor-grabbing
+                            transition-transform duration-200
+                            rounded-2xl
+                            shadow-[0_20px_80px_rgba(0,0,0,0.65)]
+                        "
+                                    style={{
+                                        transform: `
+                                scale(${zoom})
+                                translate(${position.x}px, ${position.y}px)
+                            `,
+                                    }}
                                 />
                             </div>
 
                         ) : (
-                            <iframe src={previewUrl} className="w-full h-[80vh]" />
+
+                            <div
+                                className="
+                        w-full
+                        h-full
+                        max-w-6xl
+                        rounded-2xl md:rounded-3xl
+                        overflow-hidden
+                        shadow-2xl
+                        border border-white/10
+                        bg-white
+                    "
+                            >
+                                <iframe
+                                    src={previewUrl}
+                                    className="w-full h-full"
+                                />
+                            </div>
+
                         )}
                     </div>
 
-                    {/* 🔥 ADD HERE (BOTTOM CENTER) */}
-                    <div className="absolute bottom-6 flex gap-3 bg-black/60 p-3 rounded-xl text-white">
-                        <button onClick={handleZoomIn}>➕</button>
-                        <button onClick={handleZoomOut}>➖</button>
-                        <button onClick={handleReset}>Reset</button>
+                    {/* BOTTOM TOOLBAR */}
+                    <div
+                        className="
+                absolute
+                bottom-4 md:bottom-6
+                left-1/2
+                -translate-x-1/2
+                z-50
+                px-4
+                w-full
+                flex justify-center
+            "
+                    >
+
+                        <div
+                            className="
+                    flex items-center
+                    bg-white/10
+                    backdrop-blur-2xl
+                    border border-white/10
+                    rounded-2xl
+                    shadow-2xl
+                    overflow-hidden
+                "
+                        >
+
+                            <button
+                                onClick={handleZoomOut}
+                                className="
+                        w-12 h-12
+                        flex items-center justify-center
+                        text-white
+                        hover:bg-white/10
+                        transition-all
+                    "
+                            >
+                                ➖
+                            </button>
+
+                            <div
+                                className="
+                        min-w-16
+                        px-2
+                        text-center
+                        text-sm
+                        font-semibold
+                        text-white
+                    "
+                            >
+                                {Math.round(zoom * 100)}%
+                            </div>
+
+                            <button
+                                onClick={handleZoomIn}
+                                className="
+                        w-12 h-12
+                        flex items-center justify-center
+                        text-white
+                        hover:bg-white/10
+                        transition-all
+                    "
+                            >
+                                ➕
+                            </button>
+
+                            <div className="w-px h-6 bg-white/10" />
+
+                            <button
+                                onClick={handleReset}
+                                className="
+                        px-4 md:px-5
+                        h-12
+                        text-white
+                        text-sm
+                        font-medium
+                        hover:bg-white/10
+                        transition-all
+                    "
+                            >
+                                Reset
+                            </button>
+                        </div>
                     </div>
 
                 </div>
             )}
-
             {showPasswordModal && (
                 <div
                     className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
@@ -1632,12 +2055,12 @@ function DocumentsPage() {
                                 </p>
                             </div>
 
-                            <div>
+                            {/* <div>
                                 <p className="text-gray-500">File</p>
                                 <p className="text-indigo-600 text-xs break-all">
                                     {selectedDoc.file_url?.split("/").pop()}
                                 </p>
-                            </div>
+                            </div> */}
 
                         </div>
 
