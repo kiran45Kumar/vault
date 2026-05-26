@@ -1,5 +1,5 @@
 import api from "../api/axios";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { FiFileText, FiImage, FiFile, FiTrash2, FiEye, FiX } from "react-icons/fi";
 import { useState } from "react";

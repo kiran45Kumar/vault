@@ -22,7 +22,7 @@ import {
 import { SlLock } from "react-icons/sl";
 import { bulkMoveToTrash, bulkRestore, bulkPermanentDelete } from "../services/documentService";
 import { useSwipeable } from "react-swipeable";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 function DocumentsPage() {
     const [docs, setDocs] = useState([]);

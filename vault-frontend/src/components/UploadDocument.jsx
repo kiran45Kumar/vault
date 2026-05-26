@@ -1,8 +1,12 @@
 import { useState } from "react";
 import api from "../api/axios";
-import { toast } from "react-toastify";
 import { FiUploadCloud } from "react-icons/fi";
-
+import {
+  showSuccess,
+  showError,
+  showLoading,
+  dismissToast,
+} from "../utils/toast";
 function UploadDocument({ onUpload }) {
   const [files, setFiles] = useState([]);
   const [title, setTitle] = useState("");
@@ -11,17 +15,24 @@ function UploadDocument({ onUpload }) {
   const [loading, setLoading] = useState(false);
 
   const handleUpload = async () => {
+
     if (!files.length || !title || !category) {
-      toast.error("File, Title and Category are required");
+
+      showError("File, Title and Category are required");
+
       return;
     }
 
     setLoading(true);
 
+    const loadingToast = showLoading("Uploading files...");
+
     const formData = new FormData();
+
     files.forEach((file) => {
       formData.append("files", file);
     });
+
     formData.append("title", title);
     formData.append("category_name", category);
     formData.append("description", description);
@@ -29,13 +40,16 @@ function UploadDocument({ onUpload }) {
     const token = localStorage.getItem("token");
 
     try {
+
       await api.post("/documents/", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      toast.success("Uploaded successfully!");
+      dismissToast(loadingToast);
+
+      showSuccess("Uploaded successfully!");
 
       setFiles([]);
       setTitle("");
@@ -43,20 +57,30 @@ function UploadDocument({ onUpload }) {
       setDescription("");
 
       onUpload();
+
     } catch (err) {
-      console.log(err.response); // debug
+
+      dismissToast(loadingToast);
+
+      console.log(err.response);
 
       if (err.response && err.response.data) {
+
         const errors = err.response.data;
 
-        // Loop through backend errors
         Object.keys(errors).forEach((key) => {
-          toast.error(errors[key][0]); // show first error
+
+          showError(errors[key][0]);
+
         });
+
       } else {
-        toast.error("Something went wrong");
+
+        showError("Something went wrong");
       }
+
     } finally {
+
       setLoading(false);
     }
   };

@@ -18,8 +18,6 @@ import Profile from "./pages/ProfilePage";
 import VaultLanding from "./pages/VaultLanding";
 import ResetPassword from "./pages/ResetPassword";
 import useAutoLogout from "./hooks/useAutoLogout";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 
 function AppRoutes() {
@@ -99,7 +97,6 @@ function AppRoutes() {
 
       </Routes>
 
-      <ToastContainer />
     </>
   );
 }

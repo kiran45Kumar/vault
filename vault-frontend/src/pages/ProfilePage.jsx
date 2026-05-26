@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 export default function Profile() {
   const token =

@@ -1,6 +1,6 @@
 import { GoogleLogin } from "@react-oauth/google";
 import api from "../api/axios";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
 // ... (rest of your imports)

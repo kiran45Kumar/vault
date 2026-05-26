@@ -7,7 +7,7 @@ import {
 
 import api from "../api/axios";
 
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 export default function ResetPassword() {
 

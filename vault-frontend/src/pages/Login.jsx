@@ -1,7 +1,7 @@
 import { useState } from "react";
 import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import left_img from "../assets/left_img.png";
 import GoogleAuthButton from "../components/GoogleAuthButton"; function Login({ setToken }) {
   const navigate = useNavigate();
