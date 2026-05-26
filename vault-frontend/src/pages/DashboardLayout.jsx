@@ -16,7 +16,8 @@ import { useEffect, useState } from "react";
 function DashboardLayout() {
   const token =
     localStorage.getItem("token") ||
-    sessionStorage.getItem("token"); const location = useLocation();
+    sessionStorage.getItem("token"); 
+    const location = useLocation();
   const [userData, setUserData] = useState({
     username: "",
     profile_image: "",

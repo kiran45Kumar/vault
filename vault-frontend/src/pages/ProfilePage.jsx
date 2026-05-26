@@ -34,7 +34,7 @@ export default function Profile() {
       try {
         const res = await api.get("/profile/", {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("token") || sessionStorage.getItem("token")}`,
           },
         });
         setUser({
@@ -108,7 +108,7 @@ export default function Profile() {
         formData,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("token") || sessionStorage.getItem("token")}`,
             "Content-Type": "multipart/form-data",
           },
         }
@@ -155,7 +155,7 @@ export default function Profile() {
         {},
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${localStorage.getItem("token") || sessionStorage.getItem("token")}`,
           },
         }
       );
@@ -188,7 +188,7 @@ export default function Profile() {
         { otp },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${localStorage.getItem("token") || sessionStorage.getItem("token")}`,
           },
         }
       );

@@ -10,7 +10,8 @@ function DashboardHome() {
   const [loading, setLoading] = useState(true);
   const token =
     localStorage.getItem("token") ||
-    sessionStorage.getItem("token"); const fetchDocs = async () => {
+    sessionStorage.getItem("token"); 
+    const fetchDocs = async () => {
       try {
         setLoading(true);
 

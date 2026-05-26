@@ -37,7 +37,7 @@ function UploadDocument({ onUpload }) {
     formData.append("category_name", category);
     formData.append("description", description);
 
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
 
     try {
 
