@@ -100,6 +100,7 @@ function DashboardLayout() {
           <button
             onClick={() => {
               localStorage.removeItem("token");
+              sessionStorage.removeItem("token");
               window.location.href = "/login";
             }}
             className="flex items-center gap-3 px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg"

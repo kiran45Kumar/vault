@@ -6,12 +6,13 @@ from django.contrib.auth.hashers import make_password, check_password
 from rest_framework.throttling import UserRateThrottle
 import boto3
 from django.conf import settings
-from .models import Document
+from .models import Document, DocumentFile
 from .serializers import DocumentSerializer
 from datetime import datetime, timedelta
 import jwt
-
+from .models import DocumentFile
 from django.utils import timezone
+from rest_framework.parsers import MultiPartParser, FormParser
 
 
 class UploadThrottle(UserRateThrottle):
@@ -26,7 +27,14 @@ class DocumentViewSet(viewsets.ModelViewSet):
         return Document.objects.filter(user=self.request.user, isDeleted=False)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        files = self.request.FILES.getlist("files")
+        document = serializer.save(user=self.request.user)
+        for file in files:
+
+            DocumentFile.objects.create(
+                document=document,
+                file=file
+            )
 
     def get_throttles(self):
         if self.action == "create":
@@ -110,22 +118,36 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
         # generate S3 URL
         s3 = boto3.client(
-            "s3",
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            region_name=settings.AWS_S3_REGION_NAME,
-        )
+        "s3",
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name=settings.AWS_S3_REGION_NAME,
+    )
 
-        url = s3.generate_presigned_url(
-            "get_object",
-            Params={
-                "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
-                "Key": doc.file.name,
-            },
-            ExpiresIn=300,
-        )
+        files_data = []
 
-        return Response({"file_url": url})
+        for file_obj in doc.files.all():
+
+            if not file_obj.file:
+                continue
+
+            url = s3.generate_presigned_url(
+                "get_object",
+                Params={
+                    "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
+                    "Key": file_obj.file.name,
+                },
+                ExpiresIn=300,
+            )
+
+            files_data.append({
+                "id": str(file_obj.id),
+                "file_url": url
+            })
+
+            return Response({
+                "files": files_data
+            })
 
     def destroy(self, request, *args, **kwargs):
         doc = self.get_object()
@@ -210,3 +232,35 @@ class DocumentViewSet(viewsets.ModelViewSet):
         ).delete()
 
         return Response({"message": "Selected documents deleted permanently"})
+    @action(
+    detail=False,
+    methods=["post"],
+    parser_classes=[MultiPartParser, FormParser]
+)
+    def upload_files(self, request):
+
+        files = request.FILES.getlist("files")
+
+        if not files:
+            return Response(
+                {"error": "No files uploaded"},
+                status=400
+            )
+
+        uploaded_files = []
+
+        for file in files:
+
+            uploaded = DocumentFile.objects.create(
+                file=file
+            )
+
+            uploaded_files.append({
+                "id": uploaded.id,
+                "file_url": uploaded.file.url,
+                "name": file.name,
+            })
+
+        return Response({
+            "files": uploaded_files
+        })

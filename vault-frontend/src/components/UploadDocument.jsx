@@ -4,14 +4,14 @@ import { toast } from "react-toastify";
 import { FiUploadCloud } from "react-icons/fi";
 
 function UploadDocument({ onUpload }) {
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleUpload = async () => {
-    if (!file || !title || !category) {
+    if (!files.length || !title || !category) {
       toast.error("File, Title and Category are required");
       return;
     }
@@ -19,7 +19,9 @@ function UploadDocument({ onUpload }) {
     setLoading(true);
 
     const formData = new FormData();
-    formData.append("file", file);
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
     formData.append("title", title);
     formData.append("category_name", category);
     formData.append("description", description);
@@ -35,7 +37,7 @@ function UploadDocument({ onUpload }) {
 
       toast.success("Uploaded successfully!");
 
-      setFile(null);
+      setFiles([]);
       setTitle("");
       setCategory("");
       setDescription("");
@@ -131,7 +133,8 @@ function UploadDocument({ onUpload }) {
 
           <input
             type="file"
-            onChange={(e) => setFile(e.target.files[0])}
+            multiple
+            onChange={(e) => setFiles(Array.from(e.target.files))}
             className="hidden"
             id="fileUpload"
           />
@@ -147,9 +150,16 @@ function UploadDocument({ onUpload }) {
             PDF, JPG, PNG, DOC, DOCX (Max: 10MB)
           </p>
 
-          {file && (
-            <div className="mt-4 text-sm text-gray-700 bg-gray-100 px-3 py-2 rounded-lg">
-              {file.name}
+          {files.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {files.map((file, idx) => (
+                <div
+                  key={idx}
+                  className="text-sm text-gray-700 bg-gray-100 px-3 py-2 rounded-lg"
+                >
+                  {file.name}
+                </div>
+              ))}
             </div>
           )}
         </div>

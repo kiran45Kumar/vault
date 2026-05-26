@@ -31,3 +31,11 @@ class Document(models.Model):
         ordering = ["-created_at"]
 
         # qhUl7ojuGs5Fx9AfXsiKp6NoXak
+
+
+class DocumentFile(models.Model):
+    document = models.ForeignKey(
+        Document, on_delete=models.CASCADE, related_name="files", null=True, blank=True
+    )
+
+    file = models.FileField(upload_to="documents/")

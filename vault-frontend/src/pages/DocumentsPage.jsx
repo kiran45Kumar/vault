@@ -46,7 +46,8 @@ function DocumentsPage() {
         file: null
     });
 
-
+    const [previewFiles, setPreviewFiles] = useState([]);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
     const [selectedDocs, setSelectedDocs] = useState([]);
     const toggleSelect = (id) => {
         setSelectedDocs(prev =>
@@ -93,12 +94,16 @@ function DocumentsPage() {
 
         try {
             const formData = new FormData();
+
             formData.append("title", editForm.title);
             formData.append("category_name", editForm.category);
             formData.append("description", editForm.description);
 
-            if (editForm.file) {
-                formData.append("file", editForm.file);
+            // 👉 MULTIPLE FILE SUPPORT
+            if (editForm.files && editForm.files.length > 0) {
+                editForm.files.forEach((file) => {
+                    formData.append("files", file);
+                });
             }
 
             await api.patch(`/documents/${editDoc.id}/`, formData, {
@@ -116,7 +121,8 @@ function DocumentsPage() {
             fetchDocs();
 
         } catch (err) {
-            toast.error("Update failed", err);
+            toast.error("Update failed");
+            console.log(err);
         } finally {
             setEditLoading(false);
         }
@@ -380,7 +386,7 @@ function DocumentsPage() {
         }
     };
 
-    const handleViewDirect = async (doc, index, tokenMap) => {
+    const handleViewDirect = async (doc, index = 0, tokenMap) => {
         setLoadingPreview(true);
 
         try {
@@ -393,14 +399,23 @@ function DocumentsPage() {
                 }
             });
 
-            setPreviewUrl(res.data.file_url);
-            setPreviewIndex(index);
+            const files = res.data.files || [];
 
+            if (!files.length) {
+                toast.error("No files found");
+                return;
+            }
+
+            setPreviewFiles(files);
+            setPreviewIndex(index);
+            setShowPreviewModal(true);
 
         } catch (err) {
             if (err.response?.data?.locked) {
                 setSelectedDoc(doc);
                 setShowPasswordModal(true);
+            } else {
+                toast.error("Failed to load document");
             }
         } finally {
             setLoadingPreview(false);
@@ -579,7 +594,12 @@ function DocumentsPage() {
     // const uniqueCategories = [
     //     ...new Set(docs.map((doc) => doc.category_display).filter(Boolean))
     // ].sort();
-    const isImage = (url) => {
+    const isImage = (doc) => {
+        const url =
+            doc.thumbnail ||
+            doc.files?.[0]?.file_url ||
+            "";
+
         if (!url) return false;
 
         return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(
@@ -802,19 +822,18 @@ function DocumentsPage() {
                     bg-slate-100
                 ">
 
-                                {isImage(doc.file_url) ? (
+                                {isImage(doc) ? (
                                     <img
-                                        src={doc.file_url}
+                                        src={doc.thumbnail || doc.files?.[0]?.file_url}
                                         alt={doc.title}
                                         className={`
-                                w-full h-full
-                                object-cover
-                                transition-all duration-500
-                                group-hover:scale-105
-                                ${doc.is_locked
-                                                ? "blur-2xl brightness-50"
-                                                : ""}
-                            `}
+    w-full
+    h-full
+    object-cover
+    transition-all duration-500
+    group-hover:scale-105
+    ${doc.is_locked ? "blur-2xl brightness-50" : ""}
+  `}
                                     />
                                 ) : (
                                     <div className="
@@ -2142,6 +2161,138 @@ function DocumentsPage() {
                             Cancel
                         </button>
 
+                    </div>
+                </div>
+            )}
+
+            {showPreviewModal && (
+                <div className="
+        fixed inset-0 z-100
+        bg-black/90
+        flex flex-col
+    ">
+
+                    {/* TOP BAR */}
+                    <div className="
+            flex items-center justify-between
+            p-4
+            text-white
+            border-b border-white/10
+        ">
+                        <h2 className="text-sm md:text-base font-medium">
+                            File {previewIndex + 1} of {previewFiles.length}
+                        </h2>
+
+                        <button
+                            onClick={() => setShowPreviewModal(false)}
+                            className="
+                    w-10 h-10
+                    rounded-full
+                    bg-white/10
+                    hover:bg-white/20
+                    flex items-center justify-center
+                    text-xl
+                "
+                        >
+                            ✕
+                        </button>
+                    </div>
+
+                    {/* CONTENT */}
+                    <div className="
+            flex-1
+            flex items-center justify-center
+            relative
+            overflow-hidden
+        ">
+
+                        {/* PREV BUTTON */}
+                        {previewIndex > 0 && (
+                            <button
+                                onClick={() =>
+                                    setPreviewIndex((p) => p - 1)
+                                }
+                                className="
+                        absolute left-4 z-20
+                        w-12 h-12
+                        rounded-full
+                        bg-black/50
+                        hover:bg-black/70
+                        text-white text-2xl
+                    "
+                            >
+                                ‹
+                            </button>
+                        )}
+
+                        {/* IMAGE */}
+                        <img
+                            src={previewFiles[previewIndex]?.file_url}
+                            alt=""
+                            className="
+                    max-h-[85vh]
+                    max-w-[95vw]
+                    object-contain
+                    rounded-xl
+                    shadow-2xl
+                "
+                        />
+
+                        {/* NEXT BUTTON */}
+                        {previewIndex < previewFiles.length - 1 && (
+                            <button
+                                onClick={() =>
+                                    setPreviewIndex((p) => p + 1)
+                                }
+                                className="
+                        absolute right-4 z-20
+                        w-12 h-12
+                        rounded-full
+                        bg-black/50
+                        hover:bg-black/70
+                        text-white text-2xl
+                    "
+                            >
+                                ›
+                            </button>
+                        )}
+                    </div>
+
+                    {/* THUMBNAILS */}
+                    <div className="
+            p-4
+            flex gap-3
+            overflow-x-auto
+            border-t border-white/10
+            bg-black/60
+        ">
+                        {previewFiles.map((file, i) => (
+                            <button
+                                key={i}
+                                onClick={() => setPreviewIndex(i)}
+                                className={`
+                        shrink-0
+                        w-20 h-20
+                        rounded-xl
+                        overflow-hidden
+                        border-2
+                        transition-all
+                        ${previewIndex === i
+                                        ? "border-indigo-500 scale-105"
+                                        : "border-transparent opacity-60"
+                                    }
+                    `}
+                            >
+                                <img
+                                    src={file.file_url}
+                                    alt=""
+                                    className="
+                            w-full h-full
+                            object-cover
+                        "
+                                />
+                            </button>
+                        ))}
                     </div>
                 </div>
             )}

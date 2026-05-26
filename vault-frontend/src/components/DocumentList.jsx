@@ -17,21 +17,33 @@ function DocumentList({ docs, setDocs, loading, setLoading }) {
     try {
       const res = await api.get(`/documents/${doc.id}/view/`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("token") || sessionStorage.getItem("token")
+            }`,
           ...(tokenMap?.[doc.id]
             ? { "X-Unlock-Token": tokenMap[doc.id] }
             : {})
         }
       });
 
-      window.open(res.data.file_url, "_blank");
+      const files = res.data.files || [];
+
+      if (files.length === 0) {
+        toast.error("No files found");
+        return;
+      }
+
+      // 👉 OPEN FIRST FILE (quick view fallback)
+      window.open(files[0].file_url, "_blank");
+
+      // OPTIONAL (better UX):
+      // instead of opening just 1 file, open modal viewer here
 
     } catch (err) {
       if (err.response?.data?.locked) {
         setSelectedDoc(doc);
         setShowModal(true);
       } else {
-        toast.error("Failed to open file");
+        toast.error("Failed to open document");
       }
     } finally {
       setLoadingView(false);
@@ -145,10 +157,11 @@ function DocumentList({ docs, setDocs, loading, setLoading }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
 
           {docs.map((doc) => {
-            const isImageFile = doc.file_url?.includes(".jpg")
-              || doc.file_url?.includes(".jpeg")
-              || doc.file_url?.includes(".png")
-              || doc.file_url?.includes(".webp");
+            const isImageFile =
+              doc.files?.[0]?.file_url?.includes(".jpg") ||
+              doc.files?.[0]?.file_url?.includes(".jpeg") ||
+              doc.files?.[0]?.file_url?.includes(".png") ||
+              doc.files?.[0]?.file_url?.includes(".webp");
 
             return (
               <div
@@ -169,18 +182,17 @@ function DocumentList({ docs, setDocs, loading, setLoading }) {
                 {/* IMAGE PREVIEW */}
                 {isImageFile ? (
                   <div className="relative h-56 overflow-hidden bg-slate-100">
-
                     <img
-                      src={doc.file_url}
+                      src={doc.thumbnail}
                       alt={doc.title}
                       className={`
-              w-full
-              h-full
-              object-cover
-              transition-all duration-500
-              group-hover:scale-105
-              ${doc.is_locked ? "blur-2xl brightness-50" : ""}
-            `}
+    w-full
+    h-full
+    object-cover
+    transition-all duration-500
+    group-hover:scale-105
+    ${doc.is_locked ? "blur-2xl brightness-50" : ""}
+  `}
                     />
 
                     {/* LOCK OVERLAY */}
@@ -233,22 +245,19 @@ function DocumentList({ docs, setDocs, loading, setLoading }) {
               mt-4
             ">
 
-                        <button
-                          onClick={() => handleView(doc)}
-                          className="
-                  flex items-center gap-1
-                  text-xs
-                  bg-white/10
-                  hover:bg-white/20
-                  backdrop-blur-md
-                  px-3 py-2
-                  rounded-xl
-                  transition-all
-                "
-                        >
-                          <FiEye />
-                          View
-                        </button>
+                        {doc.files?.length > 0 && (
+                          <button
+                            onClick={() => handleView(doc)}
+                            className="
+      flex items-center gap-1
+      text-indigo-600
+      hover:underline
+    "
+                          >
+                            <FiEye />
+                            View
+                          </button>
+                        )}
 
                         <button
                           onClick={() => handleDelete(doc.id)}
@@ -346,14 +355,19 @@ function DocumentList({ docs, setDocs, loading, setLoading }) {
             "
                     >
 
-                      {doc.file_url && (
+                      {doc.files?.length > 0 && (
                         <button
                           onClick={() => handleView(doc)}
                           className="
-                  flex items-center gap-1
-                  text-indigo-600
-                  hover:underline
-                "
+      flex items-center gap-1
+      text-xs
+      bg-white/10
+      hover:bg-white/20
+      backdrop-blur-md
+      px-3 py-2
+      rounded-xl
+      transition-all
+    "
                         >
                           <FiEye />
                           View
